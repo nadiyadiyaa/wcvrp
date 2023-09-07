@@ -1,0 +1,81 @@
+{% extends 'layout/base.html' %} {% load static %} {% block content %}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+    <div class="col-12">
+      <form method="POST" action="{% url 'submit_place' %}">
+        <div class="card">
+          <div class="card-header">
+            <h4 style="display: inline-block" class="card-title">Add Place</h4>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-6">
+                <div class="mb-3">
+                  <label for="exampleFormControlInput1" class="form-label"
+                    >Name</label
+                  >
+                  <input type="text" name="name" class="form-control" />
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="mb-3">
+                  <label for="exampleFormControlInput1" class="form-label"
+                    >Location</label
+                  >
+                  <input type="text" name="location" class="form-control" />
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="mb-3">
+                  <label for="exampleFormControlInput1" class="form-label"
+                    >Latitude</label
+                  >
+                  <input type="text" name="latitude" class="form-control" />
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="mb-3">
+                  <label for="exampleFormControlInput1" class="form-label"
+                    >Longitude</label
+                  >
+                  <input type="text" name="longitude" class="form-control" />
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="mb-3">
+                  <label for="exampleFormControlInput1" class="form-label"
+                    >Volume</label
+                  >
+                  <input type="text" name="volume" class="form-control" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <button
+              type="button"
+              onclick="window.history.go(-1); return false;"
+              class="btn btn-outline-secondary btn-md"
+            >
+              <i class="bi bi-arrow-left" style="margin-right: 3px"></i>
+              Back
+            </button>
+
+            <button
+              type="submit"
+              class="btn btn-primary btn-md text-white"
+              style="margin-left: 10px"
+            >
+              <i class="bi bi-box-arrow-down" style="margin-right: 3px"></i>
+              Save
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock content %} {% block js %} {% endblock js %}

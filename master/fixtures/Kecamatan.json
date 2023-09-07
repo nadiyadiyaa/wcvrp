@@ -1,0 +1,38 @@
+[
+  {
+    "model": "master.Kecamatan",
+    "pk": 1,
+    "fields": {
+      "name": "Banyumanik",
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  },
+  {
+    "model": "master.Kecamatan",
+    "pk": 2,
+    "fields": {
+      "name": "Gunungpati",
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  },
+  {
+    "model": "master.Kecamatan",
+    "pk": 3,
+    "fields": {
+      "name": "Tembalang",
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  },
+  {
+    "model": "master.Kecamatan",
+    "pk": 4,
+    "fields": {
+      "name": "Candisari",
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  }
+]

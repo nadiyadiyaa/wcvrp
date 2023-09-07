@@ -1,0 +1,20 @@
+[
+  {
+    "model": "master.TruckType",
+    "pk": 1,
+    "fields": {
+      "truck_type": "Truk Armroll",
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  },
+  {
+    "model": "master.TruckType",
+    "pk": 2,
+    "fields": {
+      "truck_type": "Truk Dump",
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  }
+]

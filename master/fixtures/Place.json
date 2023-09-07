@@ -1,0 +1,28 @@
+[
+  {
+    "model": "master.Place",
+    "pk": 1,
+    "fields": {
+      "nodes": "X",
+      "name": "TPA Jatibarang",
+      "location": "Jl. Untung Suropati",
+      "latitude": "-7.0232",
+      "longitude": "110.3565",
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  },
+  {
+    "model": "master.Place",
+    "pk": 2,
+    "fields": {
+      "nodes": "0",
+      "name": "Kantor UPTD Kebersihan Wilayah III",
+      "location": "Jl. Tirto Agung Barat V",
+      "latitude": "-7.0612",
+      "longitude": "110.425",
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  }
+]

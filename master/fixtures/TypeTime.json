@@ -1,0 +1,24 @@
+[
+  {
+    "model": "master.TypeTime",
+    "pk": 1,
+    "fields": {
+      "type_id": 1,
+      "loading_time": 5,
+      "unloading_time": 15,
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  },
+  {
+    "model": "master.TypeTime",
+    "pk": 2,
+    "fields": {
+      "type_id": 2,
+      "loading_time": 5,
+      "unloading_time": 2,
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  }
+]

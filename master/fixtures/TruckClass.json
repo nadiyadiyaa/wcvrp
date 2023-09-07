@@ -1,0 +1,29 @@
+[
+  {
+    "model": "master.TruckClass",
+    "pk": 1,
+    "fields": {
+      "classes": "< 5 Tahun",
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  },
+  {
+    "model": "master.TruckClass",
+    "pk": 2,
+    "fields": {
+      "classes": "5 - 7 Tahun",
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  },
+  {
+    "model": "master.TruckClass",
+    "pk": 3,
+    "fields": {
+      "classes": "> 7 Tahun",
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  }
+]

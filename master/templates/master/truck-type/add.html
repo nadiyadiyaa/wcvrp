@@ -1,0 +1,51 @@
+{% extends 'layout/base.html' %} {% load static %} {% block content %}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+  <div class="row">
+    <div class="col-12">
+      <form method="PUT" action="{% url 'submit_truck_type' %}">
+        <div class="card">
+          <div class="card-header">
+            <h4 style="display: inline-block" class="card-title">
+              Add Truck Type
+            </h4>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-6">
+                <div class="mb-3">
+                  <label for="exampleFormControlInput1" class="form-label"
+                    >Truck Type</label
+                  >
+                  <input type="text" name="truck_type" class="form-control" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <button
+              type="button"
+              onclick="window.history.go(-1); return false;"
+              class="btn btn-outline-secondary btn-md"
+            >
+              <i class="bi bi-arrow-left" style="margin-right: 3px"></i>
+              Back
+            </button>
+
+            <button
+              type="submit"
+              class="btn btn-primary btn-md text-white"
+              style="margin-left: 10px"
+            >
+              <i class="bi bi-box-arrow-down" style="margin-right: 3px"></i>
+              Save
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock content %} {% block js %} {% endblock js %}

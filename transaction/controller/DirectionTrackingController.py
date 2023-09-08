@@ -55,8 +55,6 @@ class DirectionTrackingController():
         dipo = Place.objects.filter(nodes=code_dipo).first()
 
         # Dynamic variable (ritation and truck type)
-        nearest_id = dipo.id if ritation == 1 else tpa.id
-
         while process:
             # Check if finish or not
             is_finish = PlaceCompletement.objects.filter(
@@ -75,14 +73,20 @@ class DirectionTrackingController():
                     truck_capacity = int(EnumCapacity.DUMP.value)
 
             nearest = None
-            prob_nearest = PlaceDistance.objects.filter(to_place_id=nearest_id).\
+            params = {'to_place_id': dipo.id} if ritation == 1 else {
+                'from_place_id': tpa.id}
+
+            # print(f'ritation : {ritation}')
+            # print(f'nearest : {nearest_id}')
+
+            prob_nearest = PlaceDistance.objects.filter(**params).\
                 annotate(Min("distance")).\
                 order_by('distance')
 
             # Get Valid Place
             for prob in prob_nearest:
                 place_prob = PlaceCompletement.objects.get(
-                    place_id=prob.from_place_id)
+                    place_id=prob.from_place_id if ritation == 1 else prob.to_place_id)
 
                 if truck_type == int(EnumTruckType.ARMROLL.value):
                     if (
@@ -99,12 +103,12 @@ class DirectionTrackingController():
                         break
 
             place_prob = PlaceCompletement.objects.filter(
-                place_id=nearest.from_place_id)
+                place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id)
             rest = place_prob.first().rest
 
-            print(f'rest: {rest}')
-            print(f'nearest : {nearest}')
-            print(f'ritation : {ritation}')
+            # print(f'rest: {rest}')
+            # print(f'nearest : {nearest}')
+            # print(f'ritation : {ritation}')
 
             if rest >= float(truck_capacity):
                 type_time = TypeTime.objects.get(type_id=truck_type)
@@ -134,7 +138,7 @@ class DirectionTrackingController():
                         # Add Truck To Direction
                         dctn = TruckDirection(
                             truck_id=tr_history.first().id,
-                            place_id=nearest.from_place_id,
+                            place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id,
                             takes_time=time_total,
                             amount_km=nearest.distance,
                         )
@@ -164,7 +168,7 @@ class DirectionTrackingController():
                     # Add Truck To Direction
                     dctn = TruckDirection(
                         truck_id=tr_history.id,
-                        place_id=nearest.from_place_id,
+                        place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id,
                         takes_time=time_journey,
                         amount_km=nearest.distance,
                     )

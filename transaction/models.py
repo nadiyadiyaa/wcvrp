@@ -8,7 +8,7 @@ class PlaceCompletement(models.Model):
     id = models.AutoField(primary_key=True)
     place = models.ForeignKey(Place, default=None,
                               on_delete=models.CASCADE, related_name='place_completement')
-    is_complete = models.BooleanField(default=False)
+    status = models.CharField(max_length=200)
     rest = models.DecimalField(decimal_places=2, max_digits=12)
 
     created_at = models.DateTimeField(
@@ -28,9 +28,9 @@ class PlaceCompletement(models.Model):
 
 class TruckHistory(models.Model):
     id = models.AutoField(primary_key=True)
-    truck = models.ForeignKey(Truck, default=None,
-                              on_delete=models.CASCADE, related_name='truck_history')
-    rest_minutes = models.IntegerField()
+    truck_id = models.IntegerField()
+
+    reach_minutes = models.IntegerField()
     is_complete = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(
@@ -47,7 +47,7 @@ class TruckHistory(models.Model):
 
 class TruckDirection(models.Model):
     id = models.AutoField(primary_key=True)
-    truck = models.ForeignKey(Truck, default=None,
+    truck = models.ForeignKey(TruckHistory, default=None,
                               on_delete=models.CASCADE, related_name='truck_direction')
     place = models.ForeignKey(Place, default=None,
                               on_delete=models.CASCADE, related_name='place_truck_direction')

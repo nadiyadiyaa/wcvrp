@@ -40,12 +40,13 @@ class DirectionTrackingController():
         # Initialize Place
         ex_places = Place.objects.all()
         for ex in ex_places:
-            pc = PlaceCompletement(**{
-                'place_id': ex.id,
-                'rest': ex.volume if ex.volume else 0,
-                'status': EnumStatusPlace.YET,
-            })
-            pc.save()
+            if ex.id not in [1, 2]:
+                pc = PlaceCompletement(**{
+                    'place_id': ex.id,
+                    'rest': ex.volume if ex.volume else 0,
+                    'status': EnumStatusPlace.YET,
+                })
+                pc.save()
 
         # General Setup
         daily_work = SettingWork.objects.get(id=1)
@@ -76,107 +77,109 @@ class DirectionTrackingController():
             params = {'to_place_id': dipo.id} if ritation == 1 else {
                 'from_place_id': tpa.id}
 
-            # print(f'ritation : {ritation}')
-            # print(f'nearest : {nearest_id}')
-
             prob_nearest = PlaceDistance.objects.filter(**params).\
                 annotate(Min("distance")).\
                 order_by('distance')
 
             # Get Valid Place
             for prob in prob_nearest:
-                place_prob = PlaceCompletement.objects.get(
-                    place_id=prob.from_place_id if ritation == 1 else prob.to_place_id)
+                place_prob = PlaceCompletement.objects.filter(
+                    place_id=prob.from_place_id if ritation == 1 else prob.to_place_id).first()
 
-                if truck_type == int(EnumTruckType.ARMROLL.value):
-                    if (
-                        (place_prob.status != EnumStatusPlace.PARTIAL.value) and
-                        (place_prob.status != EnumStatusPlace.DONE.value)
-                    ):
-                        # print("ketemu nearest!!!!")
-                        nearest = prob
-                        break
+                if place_prob:
+                    if truck_type == int(EnumTruckType.ARMROLL.value):
+                        if (
+                            (place_prob.status != EnumStatusPlace.PARTIAL.value) and
+                            (place_prob.status != EnumStatusPlace.DONE.value)
+                        ):
+                            # print("ketemu nearest!!!!")
+                            nearest = prob
+                            break
 
-                if truck_type == int(EnumTruckType.DUMP.value):
-                    if (place_prob.status == EnumStatusPlace.PARTIAL.value):
-                        nearest = prob
-                        break
+                    if truck_type == int(EnumTruckType.DUMP.value):
+                        if (place_prob.status == EnumStatusPlace.PARTIAL.value):
+                            nearest = prob
+                            break
 
-            place_prob = PlaceCompletement.objects.filter(
-                place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id)
-            rest = place_prob.first().rest
+            if nearest:
+                place_prob = PlaceCompletement.objects.filter(
+                    place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id)
+                rest = place_prob.first().rest
 
-            # print(f'rest: {rest}')
-            # print(f'nearest : {nearest}')
-            # print(f'ritation : {ritation}')
+                if rest >= float(truck_capacity):
+                    type_time = TypeTime.objects.get(type_id=truck_type)
+                    time_process = type_time.loading_time + type_time.unloading_time
+                    time_journey = time_process + \
+                        (float(nearest.distance) * velocity)
 
-            if rest >= float(truck_capacity):
-                type_time = TypeTime.objects.get(type_id=truck_type)
-                time_process = type_time.loading_time + type_time.unloading_time
-                time_journey = time_process + \
-                    (float(nearest.distance) * velocity)
+                    check_avail_time = TruckHistory.objects.filter(
+                        truck_id=truck_id).first()
 
-                check_avail_time = TruckHistory.objects.filter(
-                    truck_id=truck_id).first()
+                    if check_avail_time:
+                        # print("masuk sini / udah ada record!!!!")
+                        time_total = check_avail_time.reach_minutes + \
+                            time_journey
+                        tr_history = TruckHistory.objects.filter(
+                            truck_id=truck_id)
 
-                if check_avail_time:
-                    # print("masuk sini / udah ada record!!!!")
-                    time_total = check_avail_time.reach_minutes + \
-                        time_journey + (float(nearest.distance) * velocity)
-                    tr_history = TruckHistory.objects.filter(
-                        truck_id=truck_id)
+                        if float(time_total) < float(daily_work.minutes):
+                            # print(f'time total : {time_total}')
 
-                    if float(time_total) < float(daily_work.minutes):
-                        # print(f'time total : {time_total}')
+                            tr_history.update(
+                                reach_minutes=time_total)
 
-                        tr_history.update(
-                            reach_minutes=time_total)
+                            place_prob.update(rest=float(
+                                rest)-float(truck_capacity))
+
+                            # Add Truck To Direction
+                            dctn = TruckDirection(
+                                truck_id=tr_history.first().id,
+                                place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id,
+                                takes_time=time_journey +
+                                (float(nearest.distance) * velocity),
+                                amount_km=nearest.distance * 2,
+                            )
+                            dctn.save()
+
+                            ritation += 1
+                        else:
+                            tr_history.update(
+                                is_complete=True)
+                            ritation = 1
+                            truck_id += 1
+
+                    else:
+                        # print("masuk sini / belum ada record")
+                        tr_history = TruckHistory(
+                            truck_id=truck_id,
+                            reach_minutes=time_journey,
+                            is_complete=False,
+                            created_at=datetime.now(),
+                            modified_at=datetime.now()
+                        )
+                        tr_history.save()
 
                         place_prob.update(rest=float(
                             rest)-float(truck_capacity))
 
+                        tps_to_tpa = PlaceDistance.objects.filter(
+                            from_place_id=tpa.id,
+                            to_place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id,
+                        ).first()
+
                         # Add Truck To Direction
                         dctn = TruckDirection(
-                            truck_id=tr_history.first().id,
+                            truck_id=tr_history.id,
                             place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id,
-                            takes_time=time_total,
-                            amount_km=nearest.distance,
+                            takes_time=time_journey +
+                            (float(tps_to_tpa.distance) * velocity),
+                            amount_km=nearest.distance + tps_to_tpa.distance,
                         )
                         dctn.save()
 
                         ritation += 1
-                    else:
-                        tr_history.update(
-                            is_complete=True)
-                        ritation = 1
-                        truck_id += 1
 
                 else:
-                    # print("masuk sini / belum ada record")
-                    tr_history = TruckHistory(
-                        truck_id=truck_id,
-                        reach_minutes=time_journey,
-                        is_complete=False,
-                        created_at=datetime.now(),
-                        modified_at=datetime.now()
-                    )
-                    tr_history.save()
-
-                    place_prob.update(rest=float(
-                        rest)-float(truck_capacity))
-
-                    # Add Truck To Direction
-                    dctn = TruckDirection(
-                        truck_id=tr_history.id,
-                        place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id,
-                        takes_time=time_journey,
-                        amount_km=nearest.distance,
-                    )
-                    dctn.save()
-
+                    # print("Sisa gabisa masuk")
+                    place_prob.update(status=EnumStatusPlace.PARTIAL.value)
                     ritation += 1
-
-            else:
-                # print("Sisa gabisa masuk")
-                place_prob.update(status=EnumStatusPlace.PARTIAL.value)
-                ritation += 1

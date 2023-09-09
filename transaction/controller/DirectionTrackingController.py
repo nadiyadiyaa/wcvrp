@@ -195,11 +195,6 @@ class DirectionTrackingController():
 
                 # TRUCK DUMP
                 elif truck_type is int(TruckType.DUMP.value):
-                    time_dump = (float(type_time.loading_time) * float(rest)) + \
-                        (float(nearest.distance) * velocity) + \
-                        (float(tpa_dis.distance) * velocity) + \
-                        (float(depot_dis.distance) * velocity)
-
                     gap = float(truck_capacity) - float(temp_capacity)
                     isEnough = rest < gap
 
@@ -211,20 +206,43 @@ class DirectionTrackingController():
                         })
                         exist_truck.save()
 
+                    reach_capacity = 0
                     reach_minutes = 0
                     if exist_truck:
                         td = TruckDirection.objects.filter(
                             truck_id=exist_truck.id).all()
                         for t in td:
+                            reach_capacity += t.capacity
                             reach_minutes += t.takes_time
 
                     temp_capacity += float(rest) if isEnough else 0
+                    time_dump = (float(type_time.loading_time) * float(rest)) + \
+                        (float(nearest.distance) * velocity) + \
+                        (float(tpa_dis.distance) * velocity) + \
+                        (float(depot_dis.distance) * velocity)
+
+                    print(f'FROM TPA DIS : {tpa_dis.from_place.name}')
+                    print(f'TO TPA DIS : {tpa_dis.to_place.name}')
+
+                    print('___________')
+
                     all_times_needed = (
                         time_dump +
                         float(reach_minutes) +
-                        (float(type_time.unloading_time) * float(temp_capacity))
+                        (float(type_time.unloading_time) *
+                         (float(temp_capacity) + float(reach_capacity)))
+                        # + (float(depot_dis.distance) * velocity)
                     )
 
+                    # check_tpa = TruckDirection.objects.filter(
+                    #     truck_id=exist_truck.id).order_by('-id').first()
+                    # if check_tpa:
+                    #     if check_tpa.place_id == 1:
+                    #         all_times_needed += float(
+                    #             depot_dis.distance) * velocity
+
+                    # print(f'truck_id : {truck_id}')
+                    reach_capacity = 0
                     if float(all_times_needed) < float(daily_work.minutes):
                         if isEnough:
                             check_tpa = TruckDirection.objects.filter(
@@ -240,11 +258,6 @@ class DirectionTrackingController():
                                     amount_km = distance_to_tpa
                                     takes_time = (
                                         amount_km * 2) + ((rest if isEnough else gap) * type_time.loading_time)
-
-                            print(f'truck_id : {truck_id}')
-                            print(f"ENOUGH : {place_id}")
-                            print(f"all_times_needed : {all_times_needed}")
-                            print('___________')
 
                             place_prob.update(rest=0 if isEnough else gap)
                             tr_direction = TruckDirection(
@@ -303,7 +316,7 @@ class DirectionTrackingController():
                                 takes_time=(float(
                                     type_time.unloading_time) * float(temp_capacity)) + float(distance_to_tpa) * velocity,
                                 amount_km=distance_to_tpa,
-                                capacity=float(temp_capacity),
+                                capacity=float(temp_capacity) - (float(rest) if isEnough else 0),
                             )
                             tr_tpa.save()
 

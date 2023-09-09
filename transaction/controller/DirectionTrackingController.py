@@ -37,15 +37,13 @@ class DirectionTrackingController():
 
         ritation = 1
         truck_id = 1
+
         truck_type = int(TruckType.ARMROLL.value)
         truck_capacity = float(Capacity.ARMROLL.value)
 
         temp_capacity = 0
         all_times_needed = 0
         replace_tpa = None
-
-        dump_to_tpa = None
-        dump_to_depo = None
 
         ex_places = Place.objects.all()
         for ex in ex_places:
@@ -127,6 +125,11 @@ class DirectionTrackingController():
                     place_id=place_id)
                 rest = place_prob.first().rest
 
+                tpa_dis = PlaceDistance.objects.filter(
+                    from_place_id=1, to_place_id=place_id).first()
+                depot_dis = PlaceDistance.objects.filter(
+                    from_place_id=1, to_place_id=2).first()
+
                 # TRUCK ARMROLL
                 if truck_type is int(TruckType.ARMROLL.value):
                     if rest >= float(truck_capacity):
@@ -192,22 +195,10 @@ class DirectionTrackingController():
 
                 # TRUCK DUMP
                 elif truck_type is int(TruckType.DUMP.value):
-                    tpa = PlaceDistance.objects.filter(
-                        from_place_id=1, to_place_id=nearest.from_place_id).first()
-                    depot = PlaceDistance.objects.filter(
-                        from_place_id=1, to_place_id=2).first()
-                    reach_minutes = 0
-
-                    if exist_truck:
-                        td = TruckDirection.objects.filter(
-                            truck_id=exist_truck.id).all()
-                        for t in td:
-                            reach_minutes += t.takes_time
-
                     time_dump = (float(type_time.loading_time) * float(rest)) + \
-                        float(nearest.distance) * velocity + \
-                        float(tpa.distance) * velocity + \
-                        float(depot.distance) * velocity
+                        (float(nearest.distance) * velocity) + \
+                        (float(tpa_dis.distance) * velocity) + \
+                        (float(depot_dis.distance) * velocity)
 
                     gap = float(truck_capacity) - float(temp_capacity)
                     isEnough = rest < gap
@@ -220,16 +211,26 @@ class DirectionTrackingController():
                         })
                         exist_truck.save()
 
+                    reach_minutes = 0
+                    if exist_truck:
+                        td = TruckDirection.objects.filter(
+                            truck_id=exist_truck.id).all()
+                        for t in td:
+                            reach_minutes += t.takes_time
+
                     temp_capacity += float(rest) if isEnough else 0
-                    all_times_needed += (
+                    all_times_needed = (
                         time_dump +
                         float(reach_minutes) +
                         (float(type_time.unloading_time) * float(temp_capacity))
-
                     )
 
-                    print(f'ritation : {ritation}')
-                    print(f'all_times_needed : {all_times_needed}')
+                    print(f'time_dump : {time_dump}')
+                    print(f'reach_minutes : {float(reach_minutes)}')
+                    print(
+                        f'unloading_time : {float(type_time.unloading_time) * float(temp_capacity)}')
+                    print(f'all_times_needed 2 : {all_times_needed}')
+                    print('________')
 
                     if float(all_times_needed) < float(daily_work.minutes):
                         if isEnough:
@@ -256,83 +257,65 @@ class DirectionTrackingController():
                                     is_complete=True
                                 )
 
-                            replace_tpa = (
-                                {'to_place_id': place_id}
-                                if
-                                place_id == 2
-                                else
-                                {'from_place_id': place_id}
-                            )
+                            if place_id == 2:
+                                replace_tpa = {'to_place_id': place_id}
+                            else:
+                                replace_tpa = {'from_place_id': place_id}
 
                             ritation += 1
 
                         else:
-                            print("masuk sini karena ga cukup muatan !!!")
-                            tpa = PlaceDistance.objects.filter(
+                            tpa_dis = PlaceDistance.objects.filter(
                                 from_place_id=1, to_place_id=place_id + 1).first()
 
-                            distance_to_tpa = tpa.distance
+                            distance_to_tpa = tpa_dis.distance
                             takes_time = (float(distance_to_tpa) * velocity)
 
-                            if not dump_to_tpa:
-                                # Insert to TPA
-                                tr_tpa = TruckDirection(
-                                    truck_id=exist_truck.id,
-                                    place_id=1,
-                                    takes_time=takes_time,
-                                    amount_km=distance_to_tpa,
-                                    capacity=temp_capacity,
-                                )
-                                tr_tpa.save()
-                                dump_to_tpa = True
-
-                            if not dump_to_depo:
-                                # Insert to Depot
-                                tr_depot = TruckDirection(
-                                    truck_id=exist_truck.id,
-                                    place_id=2,
-                                    takes_time=float(
-                                        depot.distance) * velocity,
-                                    amount_km=float(depot.distance),
-                                    capacity=0,
-                                )
-                                tr_depot.save()
-                                dump_to_depo = True
+                            tr_tpa = TruckDirection(
+                                truck_id=exist_truck.id,
+                                place_id=1,
+                                takes_time=takes_time,
+                                amount_km=distance_to_tpa,
+                                capacity=0,
+                            )
+                            tr_tpa.save()
 
                             temp_capacity = 0
                             ritation = 1
                             replace_tpa = None
 
                     else:
-                        tpa = PlaceDistance.objects.filter(
-                            from_place_id=1, to_place_id=place_id + 1).first()
-
-                        distance_to_tpa = tpa.distance
+                        distance_to_tpa = tpa_dis.distance
                         takes_time = (float(distance_to_tpa) * velocity)
 
-                        if not dump_to_tpa:
-                            # Insert to TPA
+                        check_tpa = TruckDirection.objects.filter(
+                            truck_id=exist_truck.id).order_by('-id').first()
+
+                        if check_tpa.place_id is not 1:
                             tr_tpa = TruckDirection(
                                 truck_id=exist_truck.id,
                                 place_id=1,
                                 takes_time=takes_time,
                                 amount_km=distance_to_tpa,
-                                capacity=temp_capacity,
-                            )
-                            tr_tpa.save()
-                            dump_to_tpa = True
-
-                        if not dump_to_depo:
-                            # Insert to Depot
-                            tr_depot = TruckDirection(
-                                truck_id=exist_truck.id,
-                                place_id=2,
-                                takes_time=float(depot.distance) * velocity,
-                                amount_km=float(depot.distance),
                                 capacity=0,
                             )
-                            tr_depot.save()
-                            dump_to_depo = True
+                            tr_tpa.save()
+
+                        tr_depot = TruckDirection(
+                            truck_id=exist_truck.id,
+                            place_id=2,
+                            takes_time=float(depot_dis.distance) * velocity,
+                            amount_km=float(depot_dis.distance),
+                            capacity=0,
+                        )
+                        tr_depot.save()
+
+                        reach_minutes = 0
+                        if exist_truck:
+                            td = TruckDirection.objects.filter(
+                                truck_id=exist_truck.id).all()
+                            for t in td:
+                                reach_minutes += t.takes_time
 
                         TruckHistory.objects.filter(truck_id=truck_id).update(
                             reach_minutes=reach_minutes,
@@ -343,8 +326,5 @@ class DirectionTrackingController():
                         all_times_needed = 0
                         ritation = 1
                         replace_tpa = None
-
-                        dump_to_tpa = None
-                        dump_to_depo = None
 
                         truck_id += 1

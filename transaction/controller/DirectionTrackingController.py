@@ -225,23 +225,28 @@ class DirectionTrackingController():
                         (float(type_time.unloading_time) * float(temp_capacity))
                     )
 
-                    print(f'time_dump : {time_dump}')
-                    print(f'reach_minutes : {float(reach_minutes)}')
-                    print(
-                        f'unloading_time : {float(type_time.unloading_time) * float(temp_capacity)}')
-                    print(f'all_times_needed 2 : {all_times_needed}')
-                    print('________')
-
                     if float(all_times_needed) < float(daily_work.minutes):
                         if isEnough:
-                            place_prob.update(rest=0 if isEnough else gap)
+                            check_tpa = TruckDirection.objects.filter(
+                                truck_id=exist_truck.id).order_by('-id').first()
 
+                            distance_to_tpa = tpa_dis.distance
+                            amount_km = nearest.distance
+                            takes_time = (float(
+                                type_time.loading_time) * float(rest)) + float(nearest.distance) * velocity
+
+                            if check_tpa:
+                                if check_tpa.place_id == 1:
+                                    amount_km = distance_to_tpa
+                                    takes_time = (
+                                        amount_km * 2) + ((rest if isEnough else gap) * type_time.loading_time)
+
+                            place_prob.update(rest=0 if isEnough else gap)
                             tr_direction = TruckDirection(
                                 truck_id=exist_truck.id,
                                 place_id=place_id,
-                                takes_time=(float(
-                                    type_time.loading_time) * float(rest)) + float(nearest.distance) * velocity,
-                                amount_km=nearest.distance,
+                                takes_time=takes_time,
+                                amount_km=amount_km,
                                 capacity=rest if isEnough else gap,
                             )
                             tr_direction.save()
@@ -261,20 +266,16 @@ class DirectionTrackingController():
                                 replace_tpa = {'to_place_id': place_id}
                             else:
                                 replace_tpa = {'from_place_id': place_id}
-
                             ritation += 1
 
                         else:
-                            tpa_dis = PlaceDistance.objects.filter(
-                                from_place_id=1, to_place_id=place_id + 1).first()
-
-                            distance_to_tpa = tpa_dis.distance
+                            print('___________')
                             takes_time = (float(distance_to_tpa) * velocity)
-
                             tr_tpa = TruckDirection(
                                 truck_id=exist_truck.id,
                                 place_id=1,
-                                takes_time=takes_time,
+                                takes_time=takes_time + float(temp_capacity) *
+                                type_time.unloading_time,
                                 amount_km=distance_to_tpa,
                                 capacity=0,
                             )
@@ -282,7 +283,7 @@ class DirectionTrackingController():
 
                             temp_capacity = 0
                             ritation = 1
-                            replace_tpa = None
+                            replace_tpa = {'from_place_id': place_id}
 
                     else:
                         distance_to_tpa = tpa_dis.distance
@@ -295,7 +296,8 @@ class DirectionTrackingController():
                             tr_tpa = TruckDirection(
                                 truck_id=exist_truck.id,
                                 place_id=1,
-                                takes_time=takes_time,
+                                takes_time=(float(
+                                    type_time.loading_time) * float(rest)) + float(nearest.distance) * velocity,
                                 amount_km=distance_to_tpa,
                                 capacity=0,
                             )

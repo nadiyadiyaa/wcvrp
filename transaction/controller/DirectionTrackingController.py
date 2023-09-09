@@ -241,6 +241,11 @@ class DirectionTrackingController():
                                     takes_time = (
                                         amount_km * 2) + ((rest if isEnough else gap) * type_time.loading_time)
 
+                            print(f'truck_id : {truck_id}')
+                            print(f"ENOUGH : {place_id}")
+                            print(f"all_times_needed : {all_times_needed}")
+                            print('___________')
+
                             place_prob.update(rest=0 if isEnough else gap)
                             tr_direction = TruckDirection(
                                 truck_id=exist_truck.id,
@@ -269,7 +274,6 @@ class DirectionTrackingController():
                             ritation += 1
 
                         else:
-                            print('___________')
                             takes_time = (float(distance_to_tpa) * velocity)
                             tr_tpa = TruckDirection(
                                 truck_id=exist_truck.id,
@@ -277,7 +281,7 @@ class DirectionTrackingController():
                                 takes_time=takes_time + float(temp_capacity) *
                                 type_time.unloading_time,
                                 amount_km=distance_to_tpa,
-                                capacity=0,
+                                capacity=float(temp_capacity),
                             )
                             tr_tpa.save()
 
@@ -297,9 +301,9 @@ class DirectionTrackingController():
                                 truck_id=exist_truck.id,
                                 place_id=1,
                                 takes_time=(float(
-                                    type_time.loading_time) * float(rest)) + float(nearest.distance) * velocity,
+                                    type_time.unloading_time) * float(temp_capacity)) + float(distance_to_tpa) * velocity,
                                 amount_km=distance_to_tpa,
-                                capacity=0,
+                                capacity=float(temp_capacity),
                             )
                             tr_tpa.save()
 

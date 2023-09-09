@@ -43,7 +43,6 @@ class DirectionTrackingController():
         all_times_needed = 0
         replace_tpa = None
 
-        # Initialize Place
         ex_places = Place.objects.all()
         for ex in ex_places:
             if ex.id not in [1, 2]:
@@ -64,7 +63,6 @@ class DirectionTrackingController():
 
             if is_finish < 1:
                 process = False
-                # return
 
             if truck_type is int(EnumTruckType.ARMROLL.value):
                 is_dump = PlaceCompletement.objects.filter(
@@ -81,17 +79,11 @@ class DirectionTrackingController():
 
             if replace_tpa:
                 params = replace_tpa
-                print(replace_tpa)
 
             prob_nearest = PlaceDistance.objects.filter(**params)
             prob_nearest.annotate(Min("distance")).order_by('distance')
 
             for prob in prob_nearest:
-                if truck_type == int(EnumTruckType.DUMP.value):
-                    print(f'truck_id : {truck_id}')
-                    print(f'from_place_id : {prob.from_place_id}')
-                    print(f'to_place_id : {prob.to_place_id}')
-
                 from_place_id = prob.from_place_id
                 to_place_id = prob.to_place_id
 
@@ -116,6 +108,7 @@ class DirectionTrackingController():
                             break
 
             if nearest:
+                place_id = nearest.from_place_id if ritation == 1 else nearest.to_place_id
                 type_time = TypeTime.objects.get(type_id=truck_type)
                 time_process = type_time.loading_time + type_time.unloading_time
                 time_journey = time_process + \
@@ -123,7 +116,7 @@ class DirectionTrackingController():
 
                 if truck_type == int(EnumTruckType.ARMROLL.value):
                     place_prob = PlaceCompletement.objects.filter(
-                        place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id)
+                        place_id=place_id)
                     rest = place_prob.first().rest
 
                     if rest >= float(truck_capacity):
@@ -131,25 +124,21 @@ class DirectionTrackingController():
                             truck_id=truck_id).first()
 
                         if check_avail_time:
-                            # print("masuk sini / udah ada record!!!!")
                             time_total = check_avail_time.reach_minutes + \
                                 time_journey
                             tr_history = TruckHistory.objects.filter(
                                 truck_id=truck_id)
 
                             if float(time_total) < float(daily_work.minutes):
-                                # print(f'time total : {time_total}')
-
                                 tr_history.update(
                                     reach_minutes=time_total)
 
                                 place_prob.update(rest=float(
                                     rest)-float(truck_capacity))
 
-                                # Add Truck To Direction
                                 dctn = TruckDirection(
                                     truck_id=tr_history.first().id,
-                                    place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id,
+                                    place_id=place_id,
                                     takes_time=time_journey +
                                     (float(nearest.distance) * velocity),
                                     amount_km=nearest.distance * 2,
@@ -178,12 +167,12 @@ class DirectionTrackingController():
 
                             tps_to_tpa = PlaceDistance.objects.filter(
                                 from_place_id=tpa.id,
-                                to_place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id,
+                                to_place_id=place_id,
                             ).first()
 
                             dctn = TruckDirection(
                                 truck_id=tr_history.id,
-                                place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id,
+                                place_id=place_id,
                                 takes_time=time_journey +
                                 (float(tps_to_tpa.distance) * velocity),
                                 amount_km=nearest.distance + tps_to_tpa.distance,
@@ -195,23 +184,20 @@ class DirectionTrackingController():
                     else:
                         place_prob.update(status=EnumStatusPlace.PARTIAL.value)
                         ritation = 1
-                        # ritation += 1
 
-                if truck_type == int(EnumTruckType.DUMP.value):
+                elif truck_type == int(EnumTruckType.DUMP.value):
                     tr_history = TruckHistory.objects.filter(
                         truck_id=truck_id).first()
 
                     time_dump = type_time.loading_time + \
                         (float(nearest.distance) * velocity)
                     capacity = PlaceCompletement.objects.filter(
-                        place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id)
+                        place_id=place_id)
 
                     rest = capacity.first().rest
                     gap = float(truck_capacity) - \
                         float(temp_capacity)
                     isEnough = rest < gap
-
-                    print(f'terakhiran : {tr_history}')
 
                     if not tr_history:
                         tr_history = TruckHistory(**{
@@ -232,7 +218,7 @@ class DirectionTrackingController():
 
                             tr_direction = TruckDirection(
                                 truck_id=tr_history.id,
-                                place_id=nearest.from_place_id if ritation == 1 else nearest.to_place_id,
+                                place_id=place_id,
                                 takes_time=time_dump,
                                 amount_km=nearest.distance,
                                 capacity=rest if isEnough else gap,
@@ -244,18 +230,13 @@ class DirectionTrackingController():
                             capacity.update(
                                 status=EnumStatusPlace.DONE)
 
-                            print(model_to_dict(nearest))
-                            change_tpa_id = nearest.from_place_id if ritation == 1 else nearest.to_place_id
-                            if change_tpa_id == 2:
-                                replace_tpa = {'to_place_id': change_tpa_id}
-                            else:
-                                replace_tpa = {'from_place_id': change_tpa_id}
-                            # print(f'tpa_change : {change_tpa_id}')
+                            change_tpa_id = place_id
+                            replace_tpa = (
+                                {'to_place_id': change_tpa_id} if change_tpa_id == 2 else
+                                {'from_place_id': change_tpa_id}
+                            )
 
                             ritation += 1
-                            # print(f'place : {model_to_dict(place)}')
-                            # print(f'ritation : {ritation}')
-                            # print("success create truck direction ../")
 
                     else:
                         TruckHistory.objects.filter(truck_id=truck_id).update(
@@ -267,8 +248,5 @@ class DirectionTrackingController():
                         all_times_needed = 0
                         ritation = 1
                         replace_tpa = None
-                        truck_id += 1
-                        # print("success create truck history ../")
 
-            else:
-                print('gagal maning! ...')
+                        truck_id += 1

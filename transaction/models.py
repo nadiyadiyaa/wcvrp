@@ -22,15 +22,12 @@ class PlaceCompletement(models.Model):
         db_table = "place_completements"
         ordering = ['-id']
 
-    def __str__(self):
-        return self.place.name + ' | ' + self.rest
-
 
 class TruckHistory(models.Model):
     id = models.AutoField(primary_key=True)
     truck_id = models.IntegerField()
 
-    reach_minutes = models.IntegerField()
+    reach_minutes = models.IntegerField(null=True, blank=True)
     is_complete = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(
@@ -53,6 +50,9 @@ class TruckDirection(models.Model):
                               on_delete=models.CASCADE, related_name='place_truck_direction')
     takes_time = models.DecimalField(decimal_places=2, max_digits=12)
     amount_km = models.DecimalField(decimal_places=2, max_digits=12)
+
+    capacity = models.DecimalField(
+        decimal_places=2, max_digits=12, blank=True, null=True)
 
     created_at = models.DateTimeField(
         default=datetime.now, null=True)

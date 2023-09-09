@@ -30,6 +30,7 @@ class DirectionTrackingController():
         PlaceCompletement.objects.all().delete()
 
         process = True
+        initDump = False
         velocity = 60/30  # 30km/h
         code_tpa = 'X'
         code_dipo = '0'
@@ -92,12 +93,18 @@ class DirectionTrackingController():
                     place_id=place_id).first()
 
                 if place_prob:
-                    if truck_type == int(TruckType.ARMROLL.value):
+                    if truck_type is int(TruckType.ARMROLL.value):
                         if (place_prob.status == StatusPlace.YET.value):
                             nearest = prob
                             break
 
-                    if truck_type == int(TruckType.DUMP.value):
+                    if truck_type is int(TruckType.DUMP.value):
+                        if not initDump:
+                            TruckHistory.objects.filter(
+                                truck_id=truck_id).update(is_complete=True)
+                            truck_id += 1
+                            initDump = True
+
                         if place_prob.status == StatusPlace.PARTIAL.value:
                             nearest = prob
                             break
@@ -117,7 +124,8 @@ class DirectionTrackingController():
                     place_id=place_id)
                 rest = place_prob.first().rest
 
-                if truck_type == int(TruckType.ARMROLL.value):
+                # TRUCK ARMROLL
+                if truck_type is int(TruckType.ARMROLL.value):
                     if rest >= float(truck_capacity):
                         if exist_truck:
                             time_total = exist_truck.reach_minutes + \
@@ -179,8 +187,9 @@ class DirectionTrackingController():
                         place_prob.update(status=StatusPlace.PARTIAL.value)
                         ritation = 1
 
-                elif truck_type == int(TruckType.DUMP.value):
-                    time_dump = type_time.loading_time + \
+                # TRUCK DUMP
+                elif truck_type is int(TruckType.DUMP.value):
+                    time_dump = (float(type_time.loading_time) * float(rest)) + \
                         (float(nearest.distance) * velocity)
                     gap = float(truck_capacity) - float(temp_capacity)
                     isEnough = rest < gap
@@ -190,12 +199,11 @@ class DirectionTrackingController():
                             'truck_id': truck_id,
                             'is_complete': False,
                         })
-
                         exist_truck.save()
 
-                    temp_capacity += float(rest) if isEnough else float(gap)
+                    temp_capacity += float(rest) if isEnough else 0
                     all_times_needed += (time_dump +
-                                         type_time.unloading_time)
+                                         (float(type_time.unloading_time) * float(rest)))
 
                     if float(all_times_needed) < float(daily_work.minutes):
                         if isEnough:
@@ -232,6 +240,22 @@ class DirectionTrackingController():
                             ritation += 1
 
                     else:
+                        tpa = PlaceDistance.objects.filter(
+                            from_place_id=1, to_place_id=place_id + 1).first()
+
+                        distance_to_tpa = tpa.distance
+                        takes_time = (float(distance_to_tpa) * velocity) + \
+                            (float(type_time.unloading_time) * temp_capacity)
+
+                        tr_direction = TruckDirection(
+                            truck_id=exist_truck.id,
+                            place_id=1,
+                            takes_time=takes_time,
+                            amount_km=distance_to_tpa,
+                            capacity=temp_capacity,
+                        )
+                        tr_direction.save()
+
                         TruckHistory.objects.filter(truck_id=truck_id).update(
                             reach_minutes=all_times_needed - time_dump + type_time.unloading_time,
                             is_complete=True,

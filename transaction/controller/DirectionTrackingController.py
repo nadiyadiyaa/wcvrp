@@ -93,10 +93,7 @@ class DirectionTrackingController():
 
                 if place_prob:
                     if truck_type == int(TruckType.ARMROLL.value):
-                        if (
-                            (place_prob.status != StatusPlace.PARTIAL.value) and
-                            (place_prob.status != StatusPlace.DONE.value)
-                        ):
+                        if (place_prob.status == StatusPlace.YET.value):
                             nearest = prob
                             break
 
@@ -115,6 +112,7 @@ class DirectionTrackingController():
                 truck = TruckHistory.objects.filter(
                     truck_id=truck_id)
                 exist_truck = truck.first()
+
                 place_prob = PlaceCompletement.objects.filter(
                     place_id=place_id)
                 rest = place_prob.first().rest

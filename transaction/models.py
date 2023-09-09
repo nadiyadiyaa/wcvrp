@@ -27,7 +27,7 @@ class TruckHistory(models.Model):
     id = models.AutoField(primary_key=True)
     truck_id = models.IntegerField()
 
-    reach_minutes = models.IntegerField(null=True, blank=True)
+    reach_minutes = models.DecimalField(decimal_places=2, max_digits=12)
     is_complete = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(

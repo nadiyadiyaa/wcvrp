@@ -44,6 +44,9 @@ class DirectionTrackingController():
         all_times_needed = 0
         replace_tpa = None
 
+        dump_to_tpa = None
+        dump_to_depo = None
+
         ex_places = Place.objects.all()
         for ex in ex_places:
             if ex.id not in [1, 2]:
@@ -193,6 +196,13 @@ class DirectionTrackingController():
                         from_place_id=1, to_place_id=nearest.from_place_id).first()
                     depot = PlaceDistance.objects.filter(
                         from_place_id=1, to_place_id=2).first()
+                    reach_minutes = 0
+
+                    if exist_truck:
+                        td = TruckDirection.objects.filter(
+                            truck_id=exist_truck.id).all()
+                        for t in td:
+                            reach_minutes += t.takes_time
 
                     time_dump = (float(type_time.loading_time) * float(rest)) + \
                         float(nearest.distance) * velocity + \
@@ -213,9 +223,13 @@ class DirectionTrackingController():
                     temp_capacity += float(rest) if isEnough else 0
                     all_times_needed += (
                         time_dump +
+                        float(reach_minutes) +
                         (float(type_time.unloading_time) * float(temp_capacity))
 
                     )
+
+                    print(f'ritation : {ritation}')
+                    print(f'all_times_needed : {all_times_needed}')
 
                     if float(all_times_needed) < float(daily_work.minutes):
                         if isEnough:
@@ -252,6 +266,43 @@ class DirectionTrackingController():
 
                             ritation += 1
 
+                        else:
+                            print("masuk sini karena ga cukup muatan !!!")
+                            tpa = PlaceDistance.objects.filter(
+                                from_place_id=1, to_place_id=place_id + 1).first()
+
+                            distance_to_tpa = tpa.distance
+                            takes_time = (float(distance_to_tpa) * velocity)
+
+                            if not dump_to_tpa:
+                                # Insert to TPA
+                                tr_tpa = TruckDirection(
+                                    truck_id=exist_truck.id,
+                                    place_id=1,
+                                    takes_time=takes_time,
+                                    amount_km=distance_to_tpa,
+                                    capacity=temp_capacity,
+                                )
+                                tr_tpa.save()
+                                dump_to_tpa = True
+
+                            if not dump_to_depo:
+                                # Insert to Depot
+                                tr_depot = TruckDirection(
+                                    truck_id=exist_truck.id,
+                                    place_id=2,
+                                    takes_time=float(
+                                        depot.distance) * velocity,
+                                    amount_km=float(depot.distance),
+                                    capacity=0,
+                                )
+                                tr_depot.save()
+                                dump_to_depo = True
+
+                            temp_capacity = 0
+                            ritation = 1
+                            replace_tpa = None
+
                     else:
                         tpa = PlaceDistance.objects.filter(
                             from_place_id=1, to_place_id=place_id + 1).first()
@@ -259,31 +310,29 @@ class DirectionTrackingController():
                         distance_to_tpa = tpa.distance
                         takes_time = (float(distance_to_tpa) * velocity)
 
-                        # Insert to TPA
-                        tr_tpa = TruckDirection(
-                            truck_id=exist_truck.id,
-                            place_id=1,
-                            takes_time=takes_time,
-                            amount_km=distance_to_tpa,
-                            capacity=temp_capacity,
-                        )
-                        tr_tpa.save()
+                        if not dump_to_tpa:
+                            # Insert to TPA
+                            tr_tpa = TruckDirection(
+                                truck_id=exist_truck.id,
+                                place_id=1,
+                                takes_time=takes_time,
+                                amount_km=distance_to_tpa,
+                                capacity=temp_capacity,
+                            )
+                            tr_tpa.save()
+                            dump_to_tpa = True
 
-                        # Insert to Depot
-                        tr_depot = TruckDirection(
-                            truck_id=exist_truck.id,
-                            place_id=2,
-                            takes_time=float(depot.distance) * velocity,
-                            amount_km=float(depot.distance),
-                            capacity=0,
-                        )
-                        tr_depot.save()
-
-                        td = TruckDirection.objects.filter(
-                            truck_id=exist_truck.id).all()
-                        reach_minutes = 0
-                        for t in td:
-                            reach_minutes += t.takes_time
+                        if not dump_to_depo:
+                            # Insert to Depot
+                            tr_depot = TruckDirection(
+                                truck_id=exist_truck.id,
+                                place_id=2,
+                                takes_time=float(depot.distance) * velocity,
+                                amount_km=float(depot.distance),
+                                capacity=0,
+                            )
+                            tr_depot.save()
+                            dump_to_depo = True
 
                         TruckHistory.objects.filter(truck_id=truck_id).update(
                             reach_minutes=reach_minutes,
@@ -294,5 +343,8 @@ class DirectionTrackingController():
                         all_times_needed = 0
                         ritation = 1
                         replace_tpa = None
+
+                        dump_to_tpa = None
+                        dump_to_depo = None
 
                         truck_id += 1

@@ -99,7 +99,7 @@
                                     <p class="card-text">
                                     <p>Truck Type : {{ truck.type.truck_type }}</p>
                                     <p>Total Time :{{ truck.reach_minutes }}</p>
-                                    <p>Distance : {% truck.reach_minutes divide:2 %} KM</p>
+                                    {% comment %} <p>Distance : {% truck.reach_minutes divide:2 %} KM</p> {% endcomment %}
                                     </p>
 
                                     <a href="#" class="btn btn-md btn-primary mt-3">See Detail</a>

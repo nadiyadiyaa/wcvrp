@@ -23,6 +23,7 @@
             <table class="hover" id="table-place" width="100%">
               <thead class="thead-light">
                 <tr>
+                  <th style="display:none">ID</th>
                   <th>Nodes</th>
                   <th>Name</th>
                   <th>Location</th>
@@ -36,6 +37,7 @@
               <tbody>
                 {% for pl in place %}
                 <tr>
+                  <td style="display:none">{{ pl.id }}</td>
                   <td>{{ pl.nodes }}</td>
                   <td>{{ pl.name }}</td>
                   <td>{{ pl.location }}</td>

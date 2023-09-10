@@ -6,13 +6,8 @@
       <div class="card">
         <div class="card-header">
           <h4 style="display: inline-block; margin-right: 10px" class="card-title">Truck Type</h4>
-          <a
-            href="{% url 'add_truck_type' %}"
-            class="btn btn-sm btn-warning btn-round"
-          >
-            Add Row
-          </a>
         </div>
+
         <div class="card-body">
           <div class="table-responsive">
             <table class="hover" id="table-truck-type" width="100%">
@@ -29,11 +24,7 @@
                   <td>{{ type.truck_type }}</td>
                   <td>{{ type.created_at }}</td>
                   <td>
-                    <a
-                      href="{% url 'edit_truck_type' type.id %}"
-                      class="btn btn-sm btn-primary"
-                      >Detail</a
-                  </td>
+                    <a href="{% url 'edit_truck_type' type.id %}" class="btn btn-sm btn-primary">Detail</a </td>
                 </tr>
                 {% endfor %}
               </tbody>

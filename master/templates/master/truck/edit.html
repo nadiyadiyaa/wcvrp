@@ -14,29 +14,11 @@
             <div class="row">
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlSelect1" class="form-label"
-                    >Kecamatan</label
-                  >
-                  <select
-                    name="kecamatan_id"
-                    class="form-select"
-                    id="exampleFormControlSelect1"
-                    aria-label="Default select example"
-                  >
+                  <label for="exampleFormControlSelect1" class="form-label">Kecamatan</label>
+                  <select name="kecamatan_id" class="form-select" id="exampleFormControlSelect1"
+                    aria-label="Default select example">
                     {% for kec in kecamatan %}
-                    <option
-                      value="{{ kec.id }}"
-                      {%
-                      if
-                      truck.kecamatan_id
-                      is
-                      kec.id
-                      %}
-                      selected
-                      {%
-                      endif
-                      %}
-                    >
+                    <option value="{{ kec.id }}" {% if truck.kecamatan_id is kec.id %} selected {% endif %}>
                       {{ kec.name }}
                     </option>
                     {% endfor %}
@@ -46,29 +28,11 @@
 
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlSelect1" class="form-label"
-                    >Truck Type</label
-                  >
-                  <select
-                    name="type_id"
-                    class="form-select"
-                    id="exampleFormControlSelect1"
-                    aria-label="Default select example"
-                  >
+                  <label for="exampleFormControlSelect1" class="form-label">Truck Type</label>
+                  <select name="type_id" class="form-select" id="exampleFormControlSelect1"
+                    aria-label="Default select example">
                     {% for type in truck_type %}
-                    <option
-                      value="{{ type.id }}"
-                      {%
-                      if
-                      truck.type_id
-                      is
-                      type.id
-                      %}
-                      selected
-                      {%
-                      endif
-                      %}
-                    >
+                    <option value="{{ type.id }}" {% if truck.type_id is type.id %} selected {% endif %}>
                       {{ type.truck_type }}
                     </option>
                     {% endfor %}
@@ -78,29 +42,11 @@
 
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlSelect1" class="form-label"
-                    >Truck Class</label
-                  >
-                  <select
-                    name="truck_class_id"
-                    class="form-select"
-                    id="exampleFormControlSelect1"
-                    aria-label="Default select example"
-                  >
+                  <label for="exampleFormControlSelect1" class="form-label">Truck Class</label>
+                  <select name="truck_class_id" class="form-select" id="exampleFormControlSelect1"
+                    aria-label="Default select example">
                     {% for class in truck_class %}
-                    <option
-                      value="{{ class.id }}"
-                      {%
-                      if
-                      truck.truck_class_id
-                      is
-                      class.id
-                      %}
-                      selected
-                      {%
-                      endif
-                      %}
-                    >
+                    <option value="{{ class.id }}" {% if truck.truck_class_id is class.id %} selected {% endif %}>
                       {{ class.classes }}
                     </option>
                     {% endfor %}
@@ -110,54 +56,26 @@
 
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >No. Police</label
-                  >
-                  <input
-                    type="text"
-                    name="no_pol"
-                    class="form-control"
-                    value="{{ truck.no_pol }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">No. Police</label>
+                  <input type="text" name="no_pol" class="form-control" value="{{ truck.no_pol }}" />
                 </div>
               </div>
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Year</label
-                  >
-                  <input
-                    type="text"
-                    name="year"
-                    class="form-control"
-                    value="{{ truck.year }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Year</label>
+                  <input type="text" name="year" class="form-control" value="{{ truck.year }}" />
                 </div>
               </div>
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Capacity</label
-                  >
-                  <input
-                    type="text"
-                    name="capacity"
-                    class="form-control"
-                    value="{{ truck.capacity }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Capacity</label>
+                  <input type="text" name="capacity" class="form-control" value="{{ truck.capacity }}" />
                 </div>
               </div>
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Consumption</label
-                  >
-                  <input
-                    type="text"
-                    name="consumption"
-                    class="form-control"
-                    value="{{ truck.consumption }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Consumption</label>
+                  <input type="text" name="consumption" class="form-control" value="{{ truck.consumption }}" />
                 </div>
               </div>
             </div>
@@ -165,81 +83,42 @@
             <div class="row">
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Created At</label
-                  >
-                  <input
-                    readonly
-                    type="text"
-                    name="name"
-                    class="form-control"
-                    value="{{ truck.created_at }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Created At</label>
+                  <input readonly type="text" name="name" class="form-control" value="{{ truck.created_at }}" />
                 </div>
               </div>
 
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Created By</label
-                  >
-                  <input
-                    readonly
-                    type="text"
-                    name="name"
-                    class="form-control"
-                    value="{{ truck.created_by }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Created By</label>
+                  <input readonly type="text" name="name" class="form-control" value="{{ truck.created_by }}" />
                 </div>
               </div>
 
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Modified At</label
-                  >
-                  <input
-                    readonly
-                    type="text"
-                    name="name"
-                    class="form-control"
-                    value="{{ truck.modified_at }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Modified At</label>
+                  <input readonly type="text" name="name" class="form-control" value="{{ truck.modified_at }}" />
                 </div>
               </div>
 
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Modified By</label
-                  >
-                  <input
-                    readonly
-                    type="text"
-                    name="name"
-                    class="form-control"
-                    value="{{ truck.modified_by }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Modified By</label>
+                  <input readonly type="text" name="name" class="form-control" value="{{ truck.modified_by }}" />
                 </div>
               </div>
             </div>
           </div>
 
           <div class="card-footer">
-            <button
-              type="button"
-              onclick="window.history.go(-1); return false;"
-              class="btn btn-outline-secondary btn-md"
-            >
+            <button type="button" onclick="window.history.go(-1); return false;"
+              class="btn btn-outline-secondary btn-md">
               <i class="bi bi-arrow-left" style="margin-right: 3px"></i>
               Back
             </button>
 
-            <button
-              type="submit"
-              class="btn btn-primary btn-md text-white"
-              style="margin-left: 10px"
-            >
+            <button type="submit" class="btn btn-primary btn-md text-white" style="margin-left: 10px">
               <i class="bi bi-box-arrow-down" style="margin-right: 3px"></i>
               Update
             </button>

@@ -6,7 +6,24 @@ from master.models import *
 
 class MainTrial(models.Model):
     id = models.AutoField(primary_key=True)
+    fuel = models.ForeignKey(Fuel, default=None,
+                             on_delete=models.CASCADE, related_name='main_trial')
+
     name = models.CharField(max_length=255)
+    short_desc = models.TextField(blank=True, null=True)
+
+    velocity = models.DecimalField(
+        decimal_places=2, max_digits=12, blank=True, null=True)
+
+    loading_armroll = models.DecimalField(
+        decimal_places=2, max_digits=12, blank=True, null=True)
+    unloading_armroll = models.DecimalField(
+        decimal_places=2, max_digits=12, blank=True, null=True)
+
+    loading_dump = models.DecimalField(
+        decimal_places=2, max_digits=12, blank=True, null=True)
+    unloading_dump = models.DecimalField(
+        decimal_places=2, max_digits=12, blank=True, null=True)
 
     created_at = models.DateTimeField(
         default=datetime.now, null=True)
@@ -45,6 +62,8 @@ class TruckHistory(models.Model):
     id = models.AutoField(primary_key=True)
     mtrial = models.ForeignKey(MainTrial, default=None,
                                on_delete=models.CASCADE, related_name='truck_history')
+    type = models.ForeignKey(TruckType, default=None,
+                             on_delete=models.CASCADE, related_name='truck_history')
     truck_id = models.IntegerField()
 
     reach_minutes = models.DecimalField(decimal_places=2, max_digits=12)

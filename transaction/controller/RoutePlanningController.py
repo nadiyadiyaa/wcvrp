@@ -1,12 +1,16 @@
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+
 from django.forms import model_to_dict
 from django.db.models import Sum
 from django.http.response import JsonResponse
+from django.db.models import Q
+from django.shortcuts import redirect, render
 
 from master.models import *
 from transaction.models import *
 from django.db.models import Min
-
-from django.db.models import Q
 
 
 class StatusPlace(models.TextChoices):
@@ -25,16 +29,58 @@ class Capacity(models.TextChoices):
     DUMP = 8.0
 
 
-class DirectionTrackingController():
+class RoutePlanningController():
     def index(request):
-        TruckDirection.objects.all().delete()
-        TruckHistory.objects.all().delete()
-        PlaceCompletement.objects.all().delete()
-        MainTrial.objects.all().delete()
+        rp = MainTrial.objects.all()
 
+        return render(request,
+                      "transaction/route-planning/index.html",
+                      {
+                          "rp": rp,
+                      })
+
+    def create(request):
+        velocity = SettingWork.objects.all().first()
+        fuel = Fuel.objects.all()
+        armroll = TypeTime.objects.get(type_id=1)
+        dump = TypeTime.objects.get(type_id=2)
+
+        return render(request,
+                      "transaction/route-planning/add.html",
+                      {
+                          "velocity": velocity.velocity_per_h,
+                          "fuel": fuel,
+                          "armroll": armroll,
+                          "dump": dump,
+                      })
+
+    def edit(request, id):
+        main = MainTrial.objects.get(pk=id)
+        c_exist_truck = Truck.objects.count()
+        c_truck = TruckHistory.objects.filter(
+            mtrial_id=id).count()
+
+        fuel = Fuel.objects.all()
+        truck_history = TruckHistory.objects.filter(
+            mtrial_id=id).order_by('truck_id')
+
+        return render(request,
+                      "transaction/route-planning/edit.html",
+                      {
+                          'c_exist_truck': c_exist_truck,
+                          'c_truck': c_truck,
+                          'main': main,
+                          "fuel": fuel,
+                          'truck_history': truck_history
+                      })
+
+    @csrf_exempt
+    @require_http_methods(["POST"])
+    def submit(request):
         setting = SettingWork.objects.all().first()
         # Describe Parameter
         q_name = request.POST.get('name', f'TEST__{datetime.now()}')
+        q_desc = request.POST.get('short_desc', '')
 
         q_loading_armroll = request.POST.get('loading_armroll', None)
         q_unloading_armroll = request.POST.get('unloading_armroll', None)
@@ -43,7 +89,7 @@ class DirectionTrackingController():
 
         q_fuel = request.POST.get('fuel_id', 2)
         q_velocity = request.POST.get('velocity', setting.velocity_per_h)
-        velocity = 60 / q_velocity
+        velocity = 60 / float(q_velocity)
 
         process = True
         initDump = False
@@ -64,7 +110,16 @@ class DirectionTrackingController():
         all_times_needed = 0
         replace_tpa = None
 
-        mtrial = MainTrial(name=q_name)
+        mtrial = MainTrial(
+            name=q_name,
+            short_desc=q_desc,
+            fuel_id=q_fuel,
+            velocity=velocity,
+            loading_armroll=q_loading_armroll,
+            unloading_armroll=q_unloading_armroll,
+            loading_dump=q_loading_dump,
+            unloading_dump=q_unloading_dump,
+        )
         mtrial.save()
 
         ex_places = Place.objects.all()
@@ -160,9 +215,9 @@ class DirectionTrackingController():
                 # TRUCK ARMROLL
                 if truck_type is int(TruckType.ARMROLL.value):
                     if q_loading_armroll:
-                        loading_time = q_loading_armroll
+                        loading_time = float(q_loading_armroll)
                     if q_unloading_armroll:
-                        unloading_time = q_unloading_armroll
+                        unloading_time = float(q_unloading_armroll)
 
                     time_journey = (float(nearest.distance) *
                                     velocity) + loading_time + unloading_time
@@ -209,6 +264,7 @@ class DirectionTrackingController():
                         else:
                             truck = TruckHistory(
                                 mtrial_id=mtrial.pk,
+                                type_id=truck_type,
                                 truck_id=truck_id,
                                 reach_minutes=time_journey,
                             )
@@ -247,9 +303,9 @@ class DirectionTrackingController():
                 # TRUCK DUMP
                 elif truck_type is int(TruckType.DUMP.value):
                     if q_loading_dump:
-                        loading_time = q_loading_dump
+                        loading_time = float(q_loading_dump)
                     if q_unloading_dump:
-                        unloading_time = q_unloading_dump
+                        unloading_time = float(q_unloading_dump)
 
                     gap = float(truck_capacity) - float(temp_capacity)
                     isEnough = rest < gap
@@ -257,6 +313,7 @@ class DirectionTrackingController():
                     if not exist_truck:
                         exist_truck = TruckHistory(**{
                             'mtrial_id': mtrial.pk,
+                            'type_id': truck_type,
                             'truck_id': truck_id,
                             'reach_minutes': 0,
                         })
@@ -311,9 +368,9 @@ class DirectionTrackingController():
                                 if check_tpa.place_id == ID_TPA:
                                     amount_km = distance_to_tpa
                                     takes_time = (
-                                        (amount_km * 2) +
+                                        float(amount_km * 2) +
                                         (
-                                            (rest if isEnough else gap) *
+                                            float(rest if isEnough else gap) *
                                             loading_time
                                         )
                                     )
@@ -445,7 +502,8 @@ class DirectionTrackingController():
 
                         truck_id += 1
 
-        return JsonResponse({
-            'code': 200,
-            'message': 'Success generate probability data!',
-        })
+        # return JsonResponse({
+        #     'code': 200,
+        #     'message': 'Success generate probability data!',
+        # })
+        return redirect("list_route_planning")

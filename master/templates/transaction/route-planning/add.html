@@ -1,0 +1,91 @@
+{% extends 'layout/base.html' %} {% load static %} {% block content %}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+        <div class="col-12">
+            <form method="POST" action="{% url 'submit_route_planning' %}">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 style="display: inline-block" class="card-title">Add Route Planning</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="mb-3">
+                                <label>Planning Name</label>
+                                <input type="name" name="name" class="form-control" required />
+                            </div>
+                            <div>
+                                <label for="exampleFormControlTextarea1" class="form-label">Short Description</label>
+                                <textarea name="short_desc" class="form-control" rows="3" required></textarea>
+                            </div>
+                        </div>
+                        <div class="row mt-4">
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label for="exampleFormControlSelect1" class="form-label">Fuel Type</label>
+                                    <select name="fuel_id" class="form-select" id="exampleFormControlSelect1"
+                                        aria-label="Default select example" required>
+                                        {% for fl in fuel %}
+                                        <option value="{{ fl.id }}">{{ fl.fuel_name }} | Factor : {{fl.ems_factor}}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label>Velocity (km/h)</label>
+                                    <input type="number" name="velocity" class="form-control" value="{{ velocity }}"
+                                        required />
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="mb-3">
+                                    <label>Armroll Loading Time (min)</label>
+                                    <input type="number" name="loading_armroll" class="form-control"
+                                        value="{{ armroll.loading_time }}" required />
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="mb-3">
+                                    <label>Armroll Unloading Time (min)</label>
+                                    <input type="number" name="unloading_armroll" class="form-control"
+                                        value="{{ armroll.unloading_time }}" required />
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="mb-3">
+                                    <label>Dump Loading Time (min)</label>
+                                    <input type="number" name="loading_dump" class="form-control"
+                                        value="{{ dump.loading_time }}" required />
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="mb-3">
+                                    <label>Dump Unloading Time (min)</label>
+                                    <input type="number" name="unloading_dump" class="form-control"
+                                        value="{{ dump.unloading_time }}" required />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <button type="button" onclick="window.history.go(-1); return false;"
+                            class="btn btn-outline-secondary btn-md">
+                            <i class="bi bi-arrow-left" style="margin-right: 3px"></i>
+                            Back
+                        </button>
+
+                        <button type="submit" class="btn btn-primary btn-md text-white" style="margin-left: 10px">
+                            <i class="bi bi-box-arrow-down" style="margin-right: 3px"></i>
+                            Generate
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock content %} {% block js %} {% endblock js %}

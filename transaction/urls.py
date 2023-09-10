@@ -2,10 +2,19 @@ from django.contrib import admin
 from django.urls import path
 from django.conf.urls import include, handler404
 
-from transaction.controller.DirectionTrackingController import *
+from transaction.controller.RoutePlanningController import *
 
 
 urlpatterns = [
-    path('direction-tracking', DirectionTrackingController.index,
-         name='direction_tracking'),
+    path('route-planning', RoutePlanningController.index,
+         name='list_route_planning'),
+
+    path('route-planning/<int:id>', RoutePlanningController.edit,
+         name='edit_route_planning'),
+
+    path('route-planning/add', RoutePlanningController.create,
+         name='add_route_planning'),
+
+    path('route-tracking/submit', RoutePlanningController.submit,
+         name='submit_route_planning'),
 ]

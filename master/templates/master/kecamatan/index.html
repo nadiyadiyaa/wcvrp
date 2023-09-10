@@ -5,16 +5,10 @@
     <div class="col-12">
       <div class="card">
         <div class="card-header">
-          <h4
-            style="display: inline-block; margin-right: 10px"
-            class="card-title"
-          >
+          <h4 style="display: inline-block; margin-right: 10px" class="card-title">
             Kecamatan
           </h4>
-          <a
-            href="{% url 'add_kecamatan' %}"
-            class="btn btn-sm btn-warning btn-round"
-          >
+          <a href="{% url 'add_kecamatan' %}" class="btn btn-sm btn-warning btn-round">
             Add Row
           </a>
         </div>
@@ -34,11 +28,7 @@
                   <td>{{ kec.name }}</td>
                   <td>{{ kec.created_at }}</td>
                   <td>
-                    <a
-                      href="{% url 'edit_kecamatan' kec.id %}"
-                      class="btn btn-sm btn-primary"
-                      >Detail</a
-                    >
+                    <a href="{% url 'edit_kecamatan' kec.id %}" class="btn btn-sm btn-primary">Detail</a>
                   </td>
                 </tr>
                 {% endfor %}

@@ -197,6 +197,3 @@ class Truck(models.Model):
     class Meta:
         db_table = "trucks"
         ordering = ['-id']
-
-    def __str__(self):
-        return self.no_pol + ' | ' + type.truck_type

@@ -1,11 +1,11 @@
 from django.forms import model_to_dict
 from django.db.models import Sum
+from django.http.response import JsonResponse
 
 from master.models import *
 from transaction.models import *
 from django.db.models import Min
 
-import enum
 from django.db.models import Q
 
 
@@ -54,7 +54,7 @@ class DirectionTrackingController():
 
         ex_places = Place.objects.all()
         for ex in ex_places:
-            if ex.id not in [1, 2]:
+            if ex.id not in [ID_TPA, ID_DIPO]:
                 pc = PlaceCompletement(**{
                     'place_id': ex.id,
                     'rest': ex.volume if ex.volume else 0,
@@ -67,9 +67,7 @@ class DirectionTrackingController():
 
         while process:
             is_finish = PlaceCompletement.objects.filter(
-                Q(status=StatusPlace.YET) |
-                Q(status=StatusPlace.PARTIAL)
-            ).count()
+                Q(status=StatusPlace.YET) | Q(status=StatusPlace.PARTIAL)).count()
 
             if is_finish < 1:
                 process = False
@@ -90,9 +88,8 @@ class DirectionTrackingController():
             if replace_tpa:
                 params = replace_tpa
 
-            prob_nearest = PlaceDistance.objects.filter(**params).\
-                annotate(Min("distance")).\
-                order_by('distance')
+            prob_nearest = PlaceDistance.objects.filter(**params)
+            prob_nearest.annotate(Min("distance")).order_by('distance')
 
             for prob in prob_nearest:
                 from_place_id = prob.from_place_id
@@ -110,8 +107,8 @@ class DirectionTrackingController():
 
                     if truck_type is int(TruckType.DUMP.value):
                         if not initDump:
-                            TruckHistory.objects.filter(truck_id=truck_id).\
-                                update(is_complete=True)
+                            TruckHistory.objects.filter(
+                                truck_id=truck_id).update(is_complete=True)
                             truck_id += 1
                             initDump = True
 
@@ -133,14 +130,10 @@ class DirectionTrackingController():
                 rest = place_prob.first().rest
 
                 tpa_dis = PlaceDistance.objects.filter(
-                    from_place_id=ID_TPA,
-                    to_place_id=place_id
-                ).first()
+                    from_place_id=ID_TPA, to_place_id=place_id).first()
 
                 depot_dis = PlaceDistance.objects.filter(
-                    from_place_id=ID_TPA,
-                    to_place_id=ID_DIPO
-                ).first()
+                    from_place_id=ID_TPA, to_place_id=ID_DIPO).first()
 
                 # TRUCK ARMROLL
                 if truck_type is int(TruckType.ARMROLL.value):
@@ -312,9 +305,7 @@ class DirectionTrackingController():
 
                             temp_capacity = 0
                             ritation = 1
-                            replace_tpa = {
-                                'from_place_id': place_id
-                            }
+                            replace_tpa = {'from_place_id': place_id}
 
                     else:
                         distance_to_tpa = tpa_dis.distance
@@ -362,3 +353,8 @@ class DirectionTrackingController():
                         replace_tpa = None
 
                         truck_id += 1
+
+        return JsonResponse({
+            'code': 200,
+            'message': 'Success generate probability data!',
+        })

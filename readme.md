@@ -1,13 +1,13 @@
-py manage.py makemigrations
-py manage.py migrate
+python manage.py makemigrations
+python manage.py migrate
 
-python .\manage.py loaddata .\master\fixtures\
-<!-- py manage.py initialize_data -->
-py manage.py seed_place
-py manage.py seed_truck
-py manage.py seed_nodes
+python manage.py initialize_data
+python manage.py seed_place
+python manage.py seed_truck
+python manage.py seed_nodes
 
 <!-- cara run program -->
+
 .\venv\Scripts\activate
 python .\manage.py runserver
 

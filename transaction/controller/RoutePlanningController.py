@@ -64,9 +64,19 @@ class RoutePlanningController():
         truck_history = TruckHistory.objects.filter(
             mtrial_id=id).order_by('truck_id')
 
+        total_emision = 0
+        total_distance = 0
+        for history in truck_history:
+            direction = history.truck_direction.all()
+            for dir in direction:
+                total_emision += dir.emission
+                total_distance += dir.amount_km
+
         return render(request,
                       "transaction/route-planning/edit.html",
                       {
+                          'c_distance': total_distance,
+                          'c_emission': total_emision,
                           'c_exist_truck': c_exist_truck,
                           'c_truck': c_truck,
                           'main': main,
@@ -245,6 +255,7 @@ class RoutePlanningController():
                                         time_journey +
                                         (float(nearest.distance) * velocity)
                                     ),
+                                    capacity=6.0,
                                     amount_km=nearest.distance * 2,
                                     emission=(
                                         (nearest.distance * 2) *
@@ -285,6 +296,7 @@ class RoutePlanningController():
                                     time_journey +
                                     (float(tps_to_tpa.distance) * velocity)
                                 ),
+                                capacity=6.0,
                                 amount_km=(nearest.distance +
                                            tps_to_tpa.distance),
                                 emission=(
@@ -507,3 +519,30 @@ class RoutePlanningController():
         #     'message': 'Success generate probability data!',
         # })
         return redirect("list_route_planning")
+
+    @csrf_exempt
+    @require_http_methods(["POST"])
+    def get_truck_direction(request):
+        mtrial_id = int(request.POST['mtrial_id'])
+        truck_id = int(request.POST['truck_id'])
+
+        print(f'mtrial_id : {mtrial_id}')
+        print(f'truck_id : {truck_id}')
+
+        history = TruckHistory.objects.get(pk=truck_id)
+        direction = TruckDirection.objects.filter(
+            mtrial_id=mtrial_id, truck_id=truck_id).all()
+
+        trucks = [{
+            **model_to_dict(dir),
+            'type': dir.truck.type.truck_type,
+            'cap': dir.truck.type.capacity,
+            'truck': model_to_dict(dir.truck),
+            'place': model_to_dict(dir.place)
+
+        } for idx, dir in enumerate(direction)]
+
+        return JsonResponse({
+            'code': 200,
+            'data': trucks
+        })

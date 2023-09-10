@@ -24,7 +24,7 @@ class Command(BaseCommand):
                     'no_pol': values[1].value,
                     'year': values[2].value,
                     'type_id': type.id,
-                    'capacity': Decimal(str(values[4].value).replace('m³', '').strip()),
+                    # 'capacity': Decimal(str(values[4].value).replace('m³', '').strip()),
                     'truck_class_id': values[6].value,
                     'created_by': 'System',
                     'modified_by': 'System',

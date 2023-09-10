@@ -75,34 +75,70 @@
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h3 style="display: inline-block" class="card-title">Truck Routing</h3>
-                </div>
                 <div class="card-body">
                     <div class="row mt-2">
                         <h3 class="mb-4">Summary</h3>
-                        <p>Jumlah Truk yang dibutuhkan : <span
-                                style="font-weight: bold; text-decoration: underline; color: blue">
-                                {{c_truck }} Truck</span></p>
-                        <p>Jumlah Truk yang tersedia : <span
-                                style="font-weight: bold; text-decoration: underline; color: orange">
-                                {{c_exist_truck }} Truck</span>
-                        </p>
+
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <div class="card bg-secondary">
+                                    <div class="card-header" style="margin-bottom: -15px;">
+                                        <h4 class="text-white">Truk Dibutuhkan</h4>
+                                    </div>
+                                    <div class="card-body text-white">
+                                        <p style="font-size: 16px;" class="text-white">{{c_truck }} Truck</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3">
+                                <div class="card bg-secondary">
+                                    <div class="card-header" style="margin-bottom: -15px;">
+                                        <h4 class="text-white">Truk Tersedia</h4>
+                                    </div>
+                                    <div class="card-body text-white">
+                                        <p style="font-size: 16px;" class="text-white">{{c_exist_truck }} Truck</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3">
+                                <div class="card bg-secondary">
+                                    <div class="card-header" style="margin-bottom: -15px;">
+                                        <h4 class="text-white">Total Emisi</h4>
+                                    </div>
+                                    <div class="card-body text-white">
+                                        <p style="font-size: 16px;" class="text-white">{{c_emission }} kg/CO₂</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3">
+                                <div class="card bg-secondary">
+                                    <div class="card-header" style="margin-bottom: -15px;">
+                                        <h4 class="text-white">Total Jarak</h4>
+                                    </div>
+                                    <div class="card-body text-white">
+                                        <p style="font-size: 16px;" class="text-white">{{c_distance }} KM</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <hr class="hr my-5" />
 
                         {% for truck in truck_history %}
-                        <div class="col-lg-3 mb-3">
+                        <div class="col-lg-4 mb-3">
                             <div class="card border-1">
                                 <div class="card-body">
                                     <h5 class="card-title">TRUCK {{truck.truck_id}}</h5>
                                     <p class="card-text">
-                                    <p>Truck Type : {{ truck.type.truck_type }}</p>
-                                    <p>Total Time :{{ truck.reach_minutes }}</p>
-                                    {% comment %} <p>Distance : {% truck.reach_minutes divide:2 %} KM</p> {% endcomment
-                                    %}
+                                    <p style="margin-bottom: 5px;">Truck Type : {{ truck.type.truck_type }}</p>
+                                    <p>Total Time : {{ truck.reach_minutes }}</p>
                                     </p>
-                                    <a href="#" class="btn btn-md btn-primary mt-3">See Detail</a>
+                                    <button id="detail-truck" data-mtrial="{{main.id}}" data-id="{{truck.id}}"
+                                        data-name="TRUCK {{truck.truck_id}} | {{truck.type.truck_type}}" type="button"
+                                        class="btn btn-md btn-primary mt-3">See Detail</button>
                                 </div>
                             </div>
                         </div>
@@ -122,4 +158,79 @@
     </div>
 </div>
 
-{% endblock content %} {% block js %} {% endblock js %}
+<!-- Modal -->
+<div class="modal fade" id="truckDetail" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 id="modal-title" class="modal-title" id="staticBackdropLabel">Modal title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="vtl">
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block js %}
+<script type="text/javascript">
+    $(document).on('click', '#detail-truck', function () {
+        var id = 1;
+
+        const mtrial_id = $(this).attr("data-mtrial")
+        const truck_id = $(this).attr("data-id")
+        const name = $(this).attr("data-name")
+
+        $('#modal-title').text(name);
+
+        $.ajax({
+            type: "POST",
+            url: `/get-truck-direction`,
+            data: {
+                'mtrial_id': mtrial_id,
+                'truck_id': truck_id,
+            },
+            success: function (response) {
+                const data = response.data;
+
+                $(".vtl").empty();
+                for (const dt of data) {
+                    var capacity = Number(dt.capacity)
+                    var time = Number(dt.takes_time)
+
+                    if (time > 60) {
+                        time = (time / 60).toFixed(2) + ' Hours'
+                    } else {
+                        time += ' Minutes'
+                    }
+
+                    $(".vtl").append(`
+                        <div class="event">
+                            <p style="font-weight: bold">${id}. To Place : ${dt.place.name}</p>
+                            <p style="margin-bottom: 4px">Location : ${dt.place.location}</p>
+                            <p style="margin-bottom: 4px">Capacity : ${capacity} m³</p>
+                            <p style="margin-bottom: 4px">Distance : ${dt.amount_km} KM</p>
+                            <p style="margin-bottom: 4px">Emission : ${dt.emission} kg/CO₂</p>
+                            <p style="margin-bottom: 4px">Time : ${time}</p>
+                        </div>
+                    `)
+
+                    id++;
+                }
+
+                $('#truckDetail').modal('toggle');
+            }
+        })
+    })
+
+
+</script>
+{% endblock js %}

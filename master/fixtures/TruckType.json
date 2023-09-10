@@ -4,6 +4,7 @@
     "pk": 1,
     "fields": {
       "truck_type": "Truk Armroll",
+      "capacity": 6.0,
       "created_by": "System",
       "modified_by": "System"
     }
@@ -13,6 +14,7 @@
     "pk": 2,
     "fields": {
       "truck_type": "Truk Dump",
+      "capacity": 8.0,
       "created_by": "System",
       "modified_by": "System"
     }

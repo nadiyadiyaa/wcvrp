@@ -4,12 +4,13 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 from django.contrib import messages
 
+from django.http.response import HttpResponse
 from master.models import *
-
 
 class PlaceController():
     def index(request):
-        place = Place.objects.all()
+        place = Place.objects.order_by('id')
+        # return HttpResponse(place)
 
         return render(request, "master/place/index.html", {
             "place": place

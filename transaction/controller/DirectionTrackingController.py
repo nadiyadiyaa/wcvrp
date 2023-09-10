@@ -30,15 +30,27 @@ class DirectionTrackingController():
         TruckDirection.objects.all().delete()
         TruckHistory.objects.all().delete()
         PlaceCompletement.objects.all().delete()
+        MainTrial.objects.all().delete()
 
         setting = SettingWork.objects.all().first()
+        # Describe Parameter
+        q_name = request.POST.get('name', f'TEST__{datetime.now()}')
+
+        q_loading_armroll = request.POST.get('loading_armroll', None)
+        q_unloading_armroll = request.POST.get('unloading_armroll', None)
+        q_loading_dump = request.POST.get('loading_dump', None)
+        q_unloading_dump = request.POST.get('unloading_dump', None)
+
+        q_fuel = request.POST.get('fuel_id', 2)
+        q_velocity = request.POST.get('velocity', setting.velocity_per_h)
+        velocity = 60 / q_velocity
 
         process = True
         initDump = False
-        velocity = 60 / setting.velocity_per_h
 
         ID_TPA = 1
         ID_DIPO = 2
+
         code_tpa = 'X'
         code_dipo = '0'
 
@@ -52,10 +64,14 @@ class DirectionTrackingController():
         all_times_needed = 0
         replace_tpa = None
 
+        mtrial = MainTrial(name=q_name)
+        mtrial.save()
+
         ex_places = Place.objects.all()
         for ex in ex_places:
             if ex.id not in [ID_TPA, ID_DIPO]:
                 pc = PlaceCompletement(**{
+                    'mtrial_id': mtrial.pk,
                     'place_id': ex.id,
                     'rest': ex.volume if ex.volume else 0,
                     'status': StatusPlace.YET,
@@ -66,15 +82,15 @@ class DirectionTrackingController():
         dipo = Place.objects.filter(nodes=code_dipo).first()
 
         while process:
-            is_finish = PlaceCompletement.objects.filter(
+            is_finish = PlaceCompletement.objects.filter(mtrial_id=mtrial.pk).filter(
                 Q(status=StatusPlace.YET) | Q(status=StatusPlace.PARTIAL)).count()
 
             if is_finish < 1:
                 process = False
 
             if truck_type is int(TruckType.ARMROLL.value):
-                is_dump = PlaceCompletement.objects.filter(
-                    Q(status=StatusPlace.YET)).count()
+                is_dump = PlaceCompletement.objects.filter(mtrial_id=mtrial.pk).\
+                    filter(Q(status=StatusPlace.YET)).count()
                 if is_dump < 1:
                     truck_type = int(TruckType.DUMP.value)
                     truck_capacity = Capacity.DUMP.value
@@ -97,7 +113,7 @@ class DirectionTrackingController():
 
                 place_id = from_place_id if ritation == 1 else to_place_id
                 place_prob = PlaceCompletement.objects.filter(
-                    place_id=place_id).first()
+                    mtrial_id=mtrial.pk, place_id=place_id).first()
 
                 if place_prob:
                     if truck_type is int(TruckType.ARMROLL.value):
@@ -108,7 +124,7 @@ class DirectionTrackingController():
                     if truck_type is int(TruckType.DUMP.value):
                         if not initDump:
                             TruckHistory.objects.filter(
-                                truck_id=truck_id).update(is_complete=True)
+                                mtrial_id=mtrial.pk, truck_id=truck_id).update(is_complete=True)
                             truck_id += 1
                             initDump = True
 
@@ -117,26 +133,40 @@ class DirectionTrackingController():
                             break
 
             if nearest:
-                place_id = nearest.from_place_id if ritation == 1 else nearest.to_place_id
                 type_time = TypeTime.objects.get(type_id=truck_type)
-                time_process = type_time.loading_time + type_time.unloading_time
-                time_journey = time_process + \
-                    (float(nearest.distance) * velocity)
+                loading_time = type_time.loading_time
+                unloading_time = type_time.unloading_time
 
-                truck = TruckHistory.objects.filter(truck_id=truck_id)
+                place_id = nearest.from_place_id if ritation == 1 else nearest.to_place_id
+
+                truck = TruckHistory.objects.filter(
+                    mtrial_id=mtrial.pk, truck_id=truck_id)
                 exist_truck = truck.first()
+
                 place_prob = PlaceCompletement.objects.filter(
-                    place_id=place_id)
+                    mtrial_id=mtrial.pk, place_id=place_id)
                 rest = place_prob.first().rest
 
                 tpa_dis = PlaceDistance.objects.filter(
-                    from_place_id=ID_TPA, to_place_id=place_id).first()
+                    from_place_id=ID_TPA,
+                    to_place_id=place_id).first()
 
                 depot_dis = PlaceDistance.objects.filter(
-                    from_place_id=ID_TPA, to_place_id=ID_DIPO).first()
+                    from_place_id=ID_TPA,
+                    to_place_id=ID_DIPO).first()
+
+                fuel_factor = Fuel.objects.get(pk=q_fuel)
 
                 # TRUCK ARMROLL
                 if truck_type is int(TruckType.ARMROLL.value):
+                    if q_loading_armroll:
+                        loading_time = q_loading_armroll
+                    if q_unloading_armroll:
+                        unloading_time = q_unloading_armroll
+
+                    time_journey = (float(nearest.distance) *
+                                    velocity) + loading_time + unloading_time
+
                     if rest >= float(truck_capacity):
                         if exist_truck:
                             time_total = float(exist_truck.reach_minutes) + \
@@ -153,6 +183,7 @@ class DirectionTrackingController():
                                         status=StatusPlace.DONE.value)
 
                                 dctn = TruckDirection(
+                                    mtrial_id=mtrial.pk,
                                     truck_id=exist_truck.id,
                                     place_id=place_id,
                                     takes_time=(
@@ -160,6 +191,11 @@ class DirectionTrackingController():
                                         (float(nearest.distance) * velocity)
                                     ),
                                     amount_km=nearest.distance * 2,
+                                    emission=(
+                                        (nearest.distance * 2) *
+                                        (fuel_factor.ems_factor) *
+                                        (type_time.consumption)
+                                    )
                                 )
                                 dctn.save()
                                 ritation += 1
@@ -172,6 +208,7 @@ class DirectionTrackingController():
 
                         else:
                             truck = TruckHistory(
+                                mtrial_id=mtrial.pk,
                                 truck_id=truck_id,
                                 reach_minutes=time_journey,
                             )
@@ -185,13 +222,20 @@ class DirectionTrackingController():
                             ).first()
 
                             dctn = TruckDirection(
+                                mtrial_id=mtrial.pk,
                                 truck_id=truck.id,
                                 place_id=place_id,
                                 takes_time=(
                                     time_journey +
                                     (float(tps_to_tpa.distance) * velocity)
                                 ),
-                                amount_km=nearest.distance + tps_to_tpa.distance,
+                                amount_km=(nearest.distance +
+                                           tps_to_tpa.distance),
+                                emission=(
+                                    (nearest.distance + tps_to_tpa.distance) *
+                                    (fuel_factor.ems_factor) *
+                                    (type_time.consumption)
+                                )
                             )
                             dctn.save()
                             ritation += 1
@@ -202,11 +246,17 @@ class DirectionTrackingController():
 
                 # TRUCK DUMP
                 elif truck_type is int(TruckType.DUMP.value):
+                    if q_loading_dump:
+                        loading_time = q_loading_dump
+                    if q_unloading_dump:
+                        unloading_time = q_unloading_dump
+
                     gap = float(truck_capacity) - float(temp_capacity)
                     isEnough = rest < gap
 
                     if not exist_truck:
                         exist_truck = TruckHistory(**{
+                            'mtrial_id': mtrial.pk,
                             'truck_id': truck_id,
                             'reach_minutes': 0,
                         })
@@ -214,13 +264,16 @@ class DirectionTrackingController():
 
                     temp_capacity += float(rest) if isEnough else 0
                     time_dump = (
-                        (float(type_time.loading_time) * float(rest)) +
+                        (float(loading_time) * float(rest)) +
                         (float(nearest.distance) * velocity) +
                         (float(tpa_dis.distance) * velocity) +
                         (float(depot_dis.distance) * velocity)
                     )
 
-                    sum_truck = TruckDirection.objects.filter(truck_id=exist_truck.id).\
+                    sum_truck = TruckDirection.objects.filter(
+                        mtrial_id=mtrial.pk,
+                        truck_id=exist_truck.id
+                    ).\
                         aggregate(
                             takes_time=Sum('takes_time'),
                             capacity=Sum('capacity')
@@ -233,7 +286,7 @@ class DirectionTrackingController():
                         time_dump +
                         float(takes_time if takes_time else 0) +
                         float(
-                            type_time.unloading_time *
+                            unloading_time *
                             (
                                 float(temp_capacity) +
                                 float(capacity if capacity else 0)
@@ -244,37 +297,47 @@ class DirectionTrackingController():
                     if float(all_times_needed) < float(setting.minutes):
                         if isEnough:
                             check_tpa = TruckDirection.objects.filter(
-                                truck_id=exist_truck.id).order_by('-id').first()
+                                mtrial_id=mtrial.pk,
+                                truck_id=exist_truck.id
+                            ).order_by('-id').first()
 
                             distance_to_tpa = tpa_dis.distance
                             amount_km = nearest.distance
                             takes_time = (
-                                (float(type_time.loading_time) * float(rest)) +
+                                (float(loading_time) * float(rest)) +
                                 float(nearest.distance) * velocity)
 
                             if check_tpa:
-                                if check_tpa.place_id == 1:
+                                if check_tpa.place_id == ID_TPA:
                                     amount_km = distance_to_tpa
                                     takes_time = (
                                         (amount_km * 2) +
                                         (
                                             (rest if isEnough else gap) *
-                                            type_time.loading_time
+                                            loading_time
                                         )
                                     )
 
                             place_prob.update(rest=0 if isEnough else gap)
                             tr_direction = TruckDirection(
+                                mtrial_id=mtrial.pk,
                                 truck_id=exist_truck.id,
                                 place_id=place_id,
                                 takes_time=takes_time,
-                                amount_km=amount_km,
                                 capacity=rest if isEnough else gap,
+                                amount_km=amount_km,
+                                emission=(
+                                    (amount_km) *
+                                    (fuel_factor.ems_factor) *
+                                    (type_time.consumption)
+                                )
                             )
                             tr_direction.save()
 
                             place_prob.update(status=StatusPlace.DONE)
-                            complete_all = PlaceCompletement.objects.filter(rest__gt=0).\
+                            complete_all = PlaceCompletement.objects.filter(
+                                mtrial_id=mtrial.pk,
+                                rest__gt=0).\
                                 first()
 
                             if not complete_all:
@@ -292,14 +355,20 @@ class DirectionTrackingController():
                         else:
                             takes_time = (float(distance_to_tpa) * velocity)
                             tr_tpa = TruckDirection(
+                                mtrial_id=mtrial.pk,
                                 truck_id=exist_truck.id,
                                 place_id=ID_TPA,
                                 takes_time=(
                                     takes_time + float(temp_capacity) *
-                                    type_time.unloading_time
+                                    unloading_time
                                 ),
-                                amount_km=distance_to_tpa,
                                 capacity=float(temp_capacity),
+                                amount_km=distance_to_tpa,
+                                emission=(
+                                    (distance_to_tpa) *
+                                    (fuel_factor.ems_factor) *
+                                    (type_time.consumption)
+                                )
                             )
                             tr_tpa.save()
 
@@ -312,37 +381,59 @@ class DirectionTrackingController():
                         takes_time = float(distance_to_tpa) * velocity
 
                         check_tpa = TruckDirection.objects.filter(
-                            truck_id=exist_truck.id).order_by('-id').first()
+                            mtrial_id=mtrial.pk,
+                            truck_id=exist_truck.id
+                        ).order_by('-id').first()
 
-                        if check_tpa.place_id is not 1:
+                        if check_tpa.place_id is not ID_TPA:
                             tr_tpa = TruckDirection(
+                                mtrial_id=mtrial.pk,
                                 truck_id=exist_truck.id,
                                 place_id=ID_TPA,
                                 takes_time=(
-                                    (float(type_time.unloading_time) * float(temp_capacity)) +
+                                    (float(unloading_time) * float(temp_capacity)) +
                                     float(distance_to_tpa) * velocity
                                 ),
+                                capacity=(
+                                    float(temp_capacity) -
+                                    (float(rest) if isEnough else 0)
+                                ),
                                 amount_km=distance_to_tpa,
-                                capacity=float(temp_capacity) -
-                                (float(rest) if isEnough else 0),
+                                emission=(
+                                    (distance_to_tpa) *
+                                    (fuel_factor.ems_factor) *
+                                    (type_time.consumption)
+                                )
                             )
                             tr_tpa.save()
 
                         tr_depot = TruckDirection(
+                            mtrial_id=mtrial.pk,
                             truck_id=exist_truck.id,
                             place_id=ID_DIPO,
                             takes_time=float(depot_dis.distance) * velocity,
-                            amount_km=float(depot_dis.distance),
                             capacity=0,
+                            amount_km=float(depot_dis.distance),
+                            emission=(
+                                float(depot_dis.distance) *
+                                float(fuel_factor.ems_factor) *
+                                float(type_time.consumption)
+                            )
                         )
                         tr_depot.save()
 
-                        sum_truck = TruckDirection.objects.filter(truck_id=exist_truck.id).\
+                        sum_truck = TruckDirection.objects.filter(
+                            mtrial_id=mtrial.pk,
+                            truck_id=exist_truck.id
+                        ).\
                             aggregate(
                                 takes_time=Sum('takes_time'),
                         )
 
-                        TruckHistory.objects.filter(truck_id=truck_id).update(
+                        TruckHistory.objects.filter(
+                            mtrial_id=mtrial.pk,
+                            truck_id=truck_id
+                        ).update(
                             reach_minutes=sum_truck['takes_time'],
                             is_complete=True,
                         )

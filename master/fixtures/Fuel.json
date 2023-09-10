@@ -1,0 +1,32 @@
+[
+  {
+    "model": "master.Fuel",
+    "pk": 1,
+    "fields": {
+      "fuel_name": "Solar 100%",
+      "ems_factor": 2.66,
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  },
+  {
+    "model": "master.Fuel",
+    "pk": 2,
+    "fields": {
+      "fuel_name": "Bio Solar (B30)",
+      "ems_factor": 2.52,
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  },
+  {
+    "model": "master.Fuel",
+    "pk": 3,
+    "fields": {
+      "fuel_name": "CNG",
+      "ems_factor": 0.443,
+      "created_by": "System",
+      "modified_by": "System"
+    }
+  }
+]

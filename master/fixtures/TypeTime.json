@@ -6,6 +6,7 @@
       "type_id": 1,
       "loading_time": 5,
       "unloading_time": 15,
+      "consumption": 0.53,
       "created_by": "System",
       "modified_by": "System"
     }
@@ -17,6 +18,7 @@
       "type_id": 2,
       "loading_time": 5,
       "unloading_time": 2,
+      "consumption": 0.33,
       "created_by": "System",
       "modified_by": "System"
     }

@@ -128,6 +128,27 @@ class TruckType(models.Model):
         return self.truck_type
 
 
+class Fuel(models.Model):
+    id = models.AutoField(primary_key=True)
+
+    fuel_name = models.CharField(max_length=200)
+    ems_factor = models.DecimalField(decimal_places=2, max_digits=12)
+
+    created_at = models.DateTimeField(
+        default=datetime.now, null=True)
+    created_by = models.CharField(max_length=200, blank=True)
+    modified_at = models.DateTimeField(
+        default=datetime.now, null=True)
+    modified_by = models.CharField(max_length=200, blank=True)
+
+    class Meta:
+        db_table = "feuls"
+        ordering = ['-id']
+
+    def __str__(self):
+        return self.fuel_name
+
+
 class TypeTime(models.Model):
     id = models.AutoField(primary_key=True)
     type = models.ForeignKey(TruckType, default=None,
@@ -135,6 +156,7 @@ class TypeTime(models.Model):
 
     loading_time = models.IntegerField()
     unloading_time = models.IntegerField()
+    consumption = models.DecimalField(decimal_places=2, max_digits=12)
 
     created_at = models.DateTimeField(
         default=datetime.now, null=True)
@@ -164,7 +186,6 @@ class Truck(models.Model):
     year = models.CharField(max_length=255)
 
     capacity = models.DecimalField(decimal_places=2, max_digits=12)
-    consumption = models.DecimalField(decimal_places=2, max_digits=12)
 
     created_at = models.DateTimeField(
         default=datetime.now, null=True)

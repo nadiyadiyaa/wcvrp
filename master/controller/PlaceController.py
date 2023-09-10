@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.http.response import HttpResponse
 from master.models import *
 
+
 class PlaceController():
     def index(request):
         place = Place.objects.order_by('id')
@@ -29,7 +30,21 @@ class PlaceController():
     @csrf_exempt
     @require_http_methods(["POST"])
     def submit(request):
-        place = Place(**dict(request.POST.items()))
+        name = request.POST['name']
+        location = request.POST['location']
+        latitude = request.POST['latitude']
+        longitude = request.POST['longitude']
+        volume = request.POST['volume']
+
+        last_place = Place.objects.all().order_by('id').last()
+        place = Place(
+            nodes=str(int(last_place.nodes) + 1),
+            name=name,
+            location=location,
+            latitude=latitude,
+            longitude=longitude,
+            volume=volume,
+        )
         place.save()
 
         messages.success(request, "Success create place!")
@@ -38,4 +53,21 @@ class PlaceController():
     @csrf_exempt
     @require_http_methods(["POST"])
     def update(request):
-        ...
+        id = int(request.POST['id'])
+        name = request.POST['name']
+        location = request.POST['location']
+        latitude = request.POST['latitude']
+        longitude = request.POST['longitude']
+        volume = request.POST['volume']
+
+        place = Place.objects.filter(id=id)
+        place.update(
+            name=name,
+            location=location,
+            latitude=latitude,
+            longitude=longitude,
+            volume=volume,
+        )
+
+        messages.success(request, "Success update place!")
+        return redirect("list_place")

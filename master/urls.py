@@ -8,6 +8,7 @@ from master.controller.PlaceController import *
 from master.controller.TruckTypeController import *
 from master.controller.TruckClassController import *
 from master.controller.TruckController import *
+from master.controller.FuelController import *
 
 
 urlpatterns = [
@@ -25,10 +26,14 @@ urlpatterns = [
     path('place/submit', PlaceController.submit, name='submit_place'),
     path('place/update', PlaceController.update, name='update_place'),
 
+    path('fuel', FuelController.index, name='list_fuel'),
+    path('fuel/<int:id>', FuelController.edit, name='edit_fuel'),
+    path('fuel/add', FuelController.add, name='add_fuel'),
+    path('fuel/submit', FuelController.submit, name='submit_fuel'),
+    path('fuel/update', FuelController.update, name='update_fuel'),
+
     path('truck-type', TruckTypeController.index, name='list_truck_type'),
     path('truck-type/<int:id>', TruckTypeController.edit, name='edit_truck_type'),
-    path('truck-type/add', TruckTypeController.add, name='add_truck_type'),
-    path('truck-type/submit', TruckTypeController.submit, name='submit_truck_type'),
     path('truck-type/update', TruckTypeController.update, name='update_truck_type'),
 
     path('truck-class', TruckClassController.index, name='list_truck_class'),

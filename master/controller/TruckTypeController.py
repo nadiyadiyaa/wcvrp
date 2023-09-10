@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 
 from master.models import *
+from django.contrib import messages
 
 
 class TruckTypeController():
@@ -14,9 +15,6 @@ class TruckTypeController():
             "types": types
         })
 
-    def add(request):
-        return render(request, "master/truck-type/add.html")
-
     def edit(request, id):
         truck_type = TruckType.objects.get(id=id)
 
@@ -24,8 +22,18 @@ class TruckTypeController():
             "truck_type": truck_type
         })
 
-    def submit(request):
-        ...
-
+    @csrf_exempt
+    @require_http_methods(["POST"])
     def update(request):
-        ...
+        id = int(request.POST['id'])
+        truck_type = request.POST['truck_type']
+        capacity = request.POST['capacity']
+
+        type = TruckType.objects.filter(id=id)
+        type.update(
+            truck_type=truck_type,
+            capacity=capacity,
+        )
+
+        messages.success(request, "Success update truck type!")
+        return redirect('list_truck_type')

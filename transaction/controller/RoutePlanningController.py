@@ -12,6 +12,8 @@ from master.models import *
 from transaction.models import *
 from django.db.models import Min
 
+from django.contrib import messages
+
 
 class StatusPlace(models.TextChoices):
     YET = 'YET'
@@ -514,10 +516,7 @@ class RoutePlanningController():
 
                         truck_id += 1
 
-        # return JsonResponse({
-        #     'code': 200,
-        #     'message': 'Success generate probability data!',
-        # })
+        messages.success(request, "Success generate route planning!")
         return redirect("list_route_planning")
 
     @csrf_exempt
@@ -525,9 +524,6 @@ class RoutePlanningController():
     def get_truck_direction(request):
         mtrial_id = int(request.POST['mtrial_id'])
         truck_id = int(request.POST['truck_id'])
-
-        print(f'mtrial_id : {mtrial_id}')
-        print(f'truck_id : {truck_id}')
 
         history = TruckHistory.objects.get(pk=truck_id)
         direction = TruckDirection.objects.filter(
@@ -546,3 +542,16 @@ class RoutePlanningController():
             'code': 200,
             'data': trucks
         })
+
+    @csrf_exempt
+    @require_http_methods(["POST"])
+    def delete(request):
+        id = int(request.POST['id'])
+
+        TruckDirection.objects.filter(mtrial_id=id).delete()
+        TruckHistory.objects.filter(mtrial_id=id).delete()
+        PlaceCompletement.objects.filter(mtrial_id=id).delete()
+        MainTrial.objects.filter(id=id).delete()
+
+        messages.success(request, "Success delete route planning!")
+        return redirect("list_route_planning")

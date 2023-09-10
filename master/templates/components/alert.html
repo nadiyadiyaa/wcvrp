@@ -1,0 +1,12 @@
+{% if messages %} {% for msg in messages %}
+
+
+{% if not msg.extra_tags %}
+
+{% if msg.tags == "error" %}
+<div class="alert alert-danger" style="color: grey;">{{ msg|safe }}</div>
+{% else %}
+<div class="alert alert-{{ msg.tags }}" style="color: grey;">{{ msg|safe }}</div>
+
+{% endif %}
+{% endif %} {% endfor %} {% endif %}

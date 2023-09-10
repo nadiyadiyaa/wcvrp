@@ -3,7 +3,10 @@
 <div class="container-xxl flex-grow-1 container-p-y">
   <div class="row">
     <div class="col-12">
-      <form method="PUT" action="{% url 'update_truck' %}">
+      <form method="POST" action="{% url 'update_truck' %}">
+        {% csrf_token %}
+        <input type="hidden" name="id" value="{{ truck.id }}">
+
         <div class="card">
           <div class="card-header">
             <h4 style="display: inline-block" class="card-title">
@@ -68,14 +71,9 @@
               </div>
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label">Capacity</label>
-                  <input type="text" name="capacity" class="form-control" value="{{ truck.capacity }}" />
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="mb-3">
                   <label for="exampleFormControlInput1" class="form-label">Consumption</label>
-                  <input type="text" name="consumption" class="form-control" value="{{ truck.consumption }}" />
+                  <input type="number" name="consumption" class="form-control" value="{{ truck.consumption }}"
+                    step=".01" />
                 </div>
               </div>
             </div>
@@ -84,28 +82,28 @@
               <div class="col-6">
                 <div class="mb-3">
                   <label for="exampleFormControlInput1" class="form-label">Created At</label>
-                  <input readonly type="text" name="name" class="form-control" value="{{ truck.created_at }}" />
+                  <input readonly type="text" class="form-control" value="{{ truck.created_at }}" />
                 </div>
               </div>
 
               <div class="col-6">
                 <div class="mb-3">
                   <label for="exampleFormControlInput1" class="form-label">Created By</label>
-                  <input readonly type="text" name="name" class="form-control" value="{{ truck.created_by }}" />
+                  <input readonly type="text" class="form-control" value="{{ truck.created_by }}" />
                 </div>
               </div>
 
               <div class="col-6">
                 <div class="mb-3">
                   <label for="exampleFormControlInput1" class="form-label">Modified At</label>
-                  <input readonly type="text" name="name" class="form-control" value="{{ truck.modified_at }}" />
+                  <input readonly type="text" class="form-control" value="{{ truck.modified_at }}" />
                 </div>
               </div>
 
               <div class="col-6">
                 <div class="mb-3">
                   <label for="exampleFormControlInput1" class="form-label">Modified By</label>
-                  <input readonly type="text" name="name" class="form-control" value="{{ truck.modified_by }}" />
+                  <input readonly type="text" class="form-control" value="{{ truck.modified_by }}" />
                 </div>
               </div>
             </div>

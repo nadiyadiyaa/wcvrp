@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 
 from master.models import *
+from django.contrib import messages
 
 
 class KecamatanController():
@@ -24,8 +25,23 @@ class KecamatanController():
             "kecamatan": kecamatan
         })
 
+    @csrf_exempt
+    @require_http_methods(["POST"])
     def submit(request):
-        ...
+        kecamatan = Kecamatan(name=request.POST['name'])
+        kecamatan.save()
 
+        messages.success(request, "Success create kecamatan!")
+        return redirect('list_kecamatan')
+
+    @csrf_exempt
+    @require_http_methods(["POST"])
     def update(request):
-        ...
+        id = int(request.POST['id'])
+        name = request.POST['name']
+
+        kecamatan = Kecamatan.objects.filter(id=id)
+        kecamatan.update(name=name)
+
+        messages.success(request, "Success update kecamatan!")
+        return redirect('list_kecamatan')

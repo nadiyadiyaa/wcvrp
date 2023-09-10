@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 
 from master.models import *
+from django.contrib import messages
 
 
 class TruckController():
@@ -38,8 +39,46 @@ class TruckController():
             "truck": truck
         })
 
+    @csrf_exempt
+    @require_http_methods(["POST"])
     def submit(request):
-        ...
+        kecamatan_id = int(request.POST['kecamatan_id'])
+        type_id = int(request.POST['type_id'])
+        truck_class_id = int(request.POST['truck_class_id'])
+        no_pol = request.POST['no_pol']
+        year = request.POST['year']
+        consumption = request.POST['consumption']
 
+        truck = Truck(
+            kecamatan_id=kecamatan_id,
+            type_id=type_id,
+            truck_class_id=truck_class_id,
+            no_pol=no_pol,
+            year=year,
+        )
+        truck.save()
+
+        messages.success(request, "Success create truck!")
+        return redirect("list_truck")
+
+    @csrf_exempt
+    @require_http_methods(["POST"])
     def update(request):
-        ...
+        id = int(request.POST['id'])
+        kecamatan_id = int(request.POST['kecamatan_id'])
+        type_id = int(request.POST['type_id'])
+        truck_class_id = int(request.POST['truck_class_id'])
+        no_pol = request.POST['no_pol']
+        year = request.POST['year']
+
+        truck = Truck.objects.filter(id=id)
+        truck.update(
+            kecamatan_id=kecamatan_id,
+            type_id=type_id,
+            truck_class_id=truck_class_id,
+            no_pol=no_pol,
+            year=year,
+        )
+
+        messages.success(request, "Success update truck!")
+        return redirect("list_truck")

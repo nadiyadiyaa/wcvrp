@@ -1,6 +1,6 @@
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
 from django.forms import model_to_dict
 from django.db.models import Sum
@@ -89,9 +89,76 @@ class RoutePlanningController():
                           'truck_history': truck_history
                       })
 
-    @csrf_exempt
-    @require_http_methods(["POST"])
+    # @csrf_exempt
+    # @require_http_methods(["POST"])
+
+    def complete_step(
+        **kwargs
+    ):
+        distance_to_tpa = kwargs['tpa_dis'].distance
+        takes_time = float(distance_to_tpa) * kwargs['velocity']
+
+        check_tpa = TruckDirection.objects.filter(
+            mtrial_id=kwargs['mtrial'].pk,
+            truck_id=kwargs['exist_truck'].id
+        ).order_by('-id').first()
+
+        if check_tpa.place_id is not kwargs['ID_TPA']:
+            tr_tpa = TruckDirection(
+                mtrial_id=kwargs['mtrial'].pk,
+                truck_id=kwargs['exist_truck'].id,
+                place_id=kwargs['ID_TPA'],
+                takes_time=(
+                    (float(kwargs['unloading_time']) * float(kwargs['temp_capacity'])) +
+                    float(distance_to_tpa) * kwargs['velocity']
+                ),
+                capacity=(
+                    float(kwargs['temp_capacity']) -
+                    (float(kwargs['rest']) if kwargs['isEnough'] else 0)
+                ),
+                amount_km=distance_to_tpa,
+                emission=(
+                    (distance_to_tpa) *
+                    (kwargs['fuel_factor'].ems_factor) *
+                    (kwargs['type_time'].consumption)
+                )
+            )
+            tr_tpa.save()
+
+        tr_depot = TruckDirection(
+            mtrial_id=kwargs['mtrial'].pk,
+            truck_id=kwargs['exist_truck'].id,
+            place_id=kwargs['ID_DIPO'],
+            takes_time=float(
+                kwargs['depot_dis'].distance) * kwargs['velocity'],
+            capacity=0,
+            amount_km=float(kwargs['depot_dis'].distance),
+            emission=(
+                float(kwargs['depot_dis'].distance) *
+                float(kwargs['fuel_factor'].ems_factor) *
+                float(kwargs['type_time'].consumption)
+            )
+        )
+        tr_depot.save()
+
+        sum_truck = TruckDirection.objects.filter(
+            mtrial_id=kwargs['mtrial'].pk,
+            truck_id=kwargs['exist_truck'].id
+        ).\
+            aggregate(
+                takes_time=Sum('takes_time'),
+        )
+
+        TruckHistory.objects.filter(
+            mtrial_id=kwargs['mtrial'].pk,
+            truck_id=kwargs['truck_id']
+        ).update(
+            reach_minutes=sum_truck['takes_time'],
+            is_complete=True,
+        )
+
     def submit(request):
+        print("masuk")
         setting = SettingWork.objects.all().first()
         # Describe Parameter
         q_name = request.POST.get('name', f'TEST__{datetime.now()}')
@@ -157,6 +224,8 @@ class RoutePlanningController():
 
             if is_finish < 1:
                 process = False
+                print("BERHENTI..")
+                break
 
             if truck_type is int(TruckType.ARMROLL.value):
                 is_dump = PlaceCompletement.objects.filter(mtrial_id=mtrial.pk).\
@@ -174,8 +243,9 @@ class RoutePlanningController():
             if replace_tpa:
                 params = replace_tpa
 
-            prob_nearest = PlaceDistance.objects.filter(**params)
-            prob_nearest.annotate(Min("distance")).order_by('distance')
+            prob_nearest = PlaceDistance.objects.filter(**params).\
+                annotate(Min("distance")).\
+                order_by('distance')
 
             for prob in prob_nearest:
                 from_place_id = prob.from_place_id
@@ -184,6 +254,11 @@ class RoutePlanningController():
                 place_id = from_place_id if ritation == 1 else to_place_id
                 place_prob = PlaceCompletement.objects.filter(
                     mtrial_id=mtrial.pk, place_id=place_id).first()
+
+                if truck_type is int(TruckType.DUMP.value) and place_prob:
+                    print(f'from_place_id : {from_place_id}')
+                    print(f'to_place_id : {to_place_id}')
+                    print(f'___')
 
                 if place_prob:
                     if truck_type is int(TruckType.ARMROLL.value):
@@ -370,6 +445,7 @@ class RoutePlanningController():
 
                     if float(all_times_needed) < float(setting.minutes):
                         if isEnough:
+                            print("MASUK SINIII 1..")
                             check_tpa = TruckDirection.objects.filter(
                                 mtrial_id=mtrial.pk,
                                 truck_id=exist_truck.id
@@ -424,7 +500,34 @@ class RoutePlanningController():
                                 replace_tpa = {'to_place_id': place_id}
                             else:
                                 replace_tpa = {'from_place_id': place_id}
+
+                            if is_finish <= 1:
+                                RoutePlanningController.complete_step(
+                                    ID_TPA=ID_TPA,
+                                    ID_DIPO=ID_DIPO,
+                                    tpa_dis=tpa_dis,
+                                    velocity=velocity,
+                                    mtrial=mtrial,
+                                    exist_truck=exist_truck,
+                                    unloading_time=unloading_time,
+                                    temp_capacity=temp_capacity,
+                                    rest=rest,
+                                    isEnough=isEnough,
+                                    fuel_factor=fuel_factor,
+                                    type_time=type_time,
+                                    depot_dis=depot_dis,
+                                    truck_id=truck_id,
+                                )
+
+                                temp_capacity = 0
+                                all_times_needed = 0
+                                ritation = 1
+                                replace_tpa = None
+
+                                truck_id += 1
+
                             ritation += 1
+                            print(f'place_id : {place_id}')
 
                         else:
                             takes_time = (float(distance_to_tpa) * velocity)
@@ -451,65 +554,21 @@ class RoutePlanningController():
                             replace_tpa = {'from_place_id': place_id}
 
                     else:
-                        distance_to_tpa = tpa_dis.distance
-                        takes_time = float(distance_to_tpa) * velocity
-
-                        check_tpa = TruckDirection.objects.filter(
-                            mtrial_id=mtrial.pk,
-                            truck_id=exist_truck.id
-                        ).order_by('-id').first()
-
-                        if check_tpa.place_id is not ID_TPA:
-                            tr_tpa = TruckDirection(
-                                mtrial_id=mtrial.pk,
-                                truck_id=exist_truck.id,
-                                place_id=ID_TPA,
-                                takes_time=(
-                                    (float(unloading_time) * float(temp_capacity)) +
-                                    float(distance_to_tpa) * velocity
-                                ),
-                                capacity=(
-                                    float(temp_capacity) -
-                                    (float(rest) if isEnough else 0)
-                                ),
-                                amount_km=distance_to_tpa,
-                                emission=(
-                                    (distance_to_tpa) *
-                                    (fuel_factor.ems_factor) *
-                                    (type_time.consumption)
-                                )
-                            )
-                            tr_tpa.save()
-
-                        tr_depot = TruckDirection(
-                            mtrial_id=mtrial.pk,
-                            truck_id=exist_truck.id,
-                            place_id=ID_DIPO,
-                            takes_time=float(depot_dis.distance) * velocity,
-                            capacity=0,
-                            amount_km=float(depot_dis.distance),
-                            emission=(
-                                float(depot_dis.distance) *
-                                float(fuel_factor.ems_factor) *
-                                float(type_time.consumption)
-                            )
-                        )
-                        tr_depot.save()
-
-                        sum_truck = TruckDirection.objects.filter(
-                            mtrial_id=mtrial.pk,
-                            truck_id=exist_truck.id
-                        ).\
-                            aggregate(
-                                takes_time=Sum('takes_time'),
-                        )
-
-                        TruckHistory.objects.filter(
-                            mtrial_id=mtrial.pk,
-                            truck_id=truck_id
-                        ).update(
-                            reach_minutes=sum_truck['takes_time'],
-                            is_complete=True,
+                        RoutePlanningController.complete_step(
+                            ID_TPA=ID_TPA,
+                            ID_DIPO=ID_DIPO,
+                            tpa_dis=tpa_dis,
+                            velocity=velocity,
+                            mtrial=mtrial,
+                            exist_truck=exist_truck,
+                            unloading_time=unloading_time,
+                            temp_capacity=temp_capacity,
+                            rest=rest,
+                            isEnough=isEnough,
+                            fuel_factor=fuel_factor,
+                            type_time=type_time,
+                            depot_dis=depot_dis,
+                            truck_id=truck_id,
                         )
 
                         temp_capacity = 0
@@ -518,6 +577,9 @@ class RoutePlanningController():
                         replace_tpa = None
 
                         truck_id += 1
+
+            else:
+                print("gagal ...")
 
         messages.success(request, "Success generate route planning!")
         return redirect("list_route_planning")
@@ -546,15 +608,15 @@ class RoutePlanningController():
             'data': trucks
         })
 
-    @csrf_exempt
-    @require_http_methods(["POST"])
+    # @csrf_exempt
+    # @require_http_methods(["POST"])
     def delete(request):
-        id = int(request.POST['id'])
+        # id = int(request.POST['id'])
 
-        TruckDirection.objects.filter(mtrial_id=id).delete()
-        TruckHistory.objects.filter(mtrial_id=id).delete()
-        PlaceCompletement.objects.filter(mtrial_id=id).delete()
-        MainTrial.objects.filter(id=id).delete()
+        TruckDirection.objects.filter().delete()
+        TruckHistory.objects.filter().delete()
+        PlaceCompletement.objects.filter().delete()
+        MainTrial.objects.filter().delete()
 
         messages.success(request, "Success delete route planning!")
         return redirect("list_route_planning")

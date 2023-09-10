@@ -14,16 +14,20 @@ class PlaceController():
         # return HttpResponse(place)
 
         return render(request, "master/place/index.html", {
+            'title': 'Place',
             "place": place
         })
 
     def add(request):
-        return render(request, "master/place/add.html")
+        return render(request, "master/place/add.html", {
+            'title': 'Add Place',
+        })
 
     def edit(request, id):
         place = Place.objects.get(id=id)
 
         return render(request, "master/place/edit.html", {
+            'title': 'Detail Place',
             "place": place
         })
 

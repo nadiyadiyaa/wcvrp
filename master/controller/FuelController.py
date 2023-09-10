@@ -12,16 +12,20 @@ class FuelController():
         fuels = Fuel.objects.all()
 
         return render(request, "master/fuel/index.html", {
+            'title': 'Fuel',
             "fuels": fuels
         })
 
     def add(request):
-        return render(request, "master/fuel/add.html")
+        return render(request, "master/fuel/add.html", {
+            'title': 'Add Fuel',
+        })
 
     def edit(request, id):
         fuel = Fuel.objects.get(id=id)
 
         return render(request, "master/fuel/edit.html", {
+            'title': 'Detail Fuel',
             "fuel": fuel
         })
 

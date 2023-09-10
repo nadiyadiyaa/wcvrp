@@ -38,6 +38,7 @@ class RoutePlanningController():
         return render(request,
                       "transaction/route-planning/index.html",
                       {
+                          'title': 'Route Planning',
                           "rp": rp,
                       })
 
@@ -50,6 +51,7 @@ class RoutePlanningController():
         return render(request,
                       "transaction/route-planning/add.html",
                       {
+                          'title': 'Add Route Planning',
                           "velocity": velocity.velocity_per_h,
                           "fuel": fuel,
                           "armroll": armroll,
@@ -77,6 +79,7 @@ class RoutePlanningController():
         return render(request,
                       "transaction/route-planning/edit.html",
                       {
+                          'title': 'Detail Route Planning',
                           'c_distance': total_distance,
                           'c_emission': total_emision,
                           'c_exist_truck': c_exist_truck,

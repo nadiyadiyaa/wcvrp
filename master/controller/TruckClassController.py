@@ -12,16 +12,20 @@ class TruckClassController():
         classes = TruckClass.objects.all()
 
         return render(request, "master/truck-class/index.html", {
+            'title': 'Truck Class',
             "classes": classes
         })
 
     def add(request):
-        return render(request, "master/truck-class/add.html")
+        return render(request, "master/truck-class/add.html", {
+            'title': 'Add Truck Class',
+        })
 
     def edit(request, id):
         truck_class = TruckClass.objects.get(id=id)
 
         return render(request, "master/truck-class/edit.html", {
+            'title': 'Detail Truck Class',
             "truck_class": truck_class
         })
 

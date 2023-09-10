@@ -12,16 +12,20 @@ class KecamatanController():
         kecamatan = Kecamatan.objects.all()
 
         return render(request, "master/kecamatan/index.html", {
+            'title': 'Kecamatan',
             "kecamatan": kecamatan
         })
 
     def add(request):
-        return render(request, "master/kecamatan/add.html")
+        return render(request, "master/kecamatan/add.html", {
+            'title': 'Add Kecamatan',
+        })
 
     def edit(request, id):
         kecamatan = Kecamatan.objects.get(id=id)
 
         return render(request, "master/kecamatan/edit.html", {
+            'title': 'Detail Kecamatan',
             "kecamatan": kecamatan
         })
 

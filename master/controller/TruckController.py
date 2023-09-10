@@ -12,6 +12,7 @@ class TruckController():
         truck = Truck.objects.all()
 
         return render(request, "master/truck/index.html", {
+            'title': 'Truck',
             "truck": truck
         })
 
@@ -21,6 +22,7 @@ class TruckController():
         truck_class = TruckClass.objects.all()
 
         return render(request, "master/truck/add.html", {
+            'title': 'Add Truck',
             "kecamatan": kecamatan,
             "truck_type": truck_type,
             "truck_class": truck_class,
@@ -33,6 +35,7 @@ class TruckController():
         truck = Truck.objects.get(id=id)
 
         return render(request, "master/truck/edit.html", {
+            'title': 'Detail Truck',
             "kecamatan": kecamatan,
             "truck_type": truck_type,
             "truck_class": truck_class,

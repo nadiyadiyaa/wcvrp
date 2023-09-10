@@ -12,6 +12,7 @@ class TruckTypeController():
         types = TruckType.objects.all()
 
         return render(request, "master/truck-type/index.html", {
+            'title': 'Truck Type',
             "types": types
         })
 
@@ -19,6 +20,7 @@ class TruckTypeController():
         truck_type = TruckType.objects.get(id=id)
 
         return render(request, "master/truck-type/edit.html", {
+            'title': 'Add Truck Type',
             "truck_type": truck_type
         })
 

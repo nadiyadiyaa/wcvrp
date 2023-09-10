@@ -26,7 +26,8 @@
                                     <select name="fuel_id" class="form-select" id="exampleFormControlSelect1"
                                         aria-label="Default select example" required>
                                         {% for fl in fuel %}
-                                        <option value="{{ fl.id }}">{{ fl.fuel_name }} | Factor : {{fl.ems_factor}}
+                                        <option value="{{ fl.id }}" {% if fl.id is 2 %} selected {% endif %}>
+                                            {{fl.fuel_name }} | Factor : {{fl.ems_factor}}
                                         </option>
                                         {% endfor %}
                                     </select>

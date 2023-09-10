@@ -37,7 +37,7 @@
                   <td>{{ pl.nodes }}</td>
                   <td>{{ pl.name }}</td>
                   <td>{{ pl.location }}</td>
-                  <td>{{ pl.volume }}</td>
+                  <td>{{ pl.volume|default_if_none:'-' }}</td>
                   <td>{{ pl.latitude }}</td>
                   <td>{{ pl.longitude }}</td>
                   <td>{{ pl.created_at }}</td>

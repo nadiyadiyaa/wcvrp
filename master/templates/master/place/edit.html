@@ -42,7 +42,7 @@
               <div class="col-6">
                 <div class="mb-3">
                   <label for="exampleFormControlInput1" class="form-label">Volume</label>
-                  <input type="text" name="volume" class="form-control" value="{{ place.volume }}" />
+                  <input type="text" name="volume" class="form-control" value="{{ place.volume|default_if_none:0 }}" />
                 </div>
               </div>
             </div>

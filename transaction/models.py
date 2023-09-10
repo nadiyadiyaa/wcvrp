@@ -50,6 +50,7 @@ class TruckDirection(models.Model):
                               on_delete=models.CASCADE, related_name='place_truck_direction')
     takes_time = models.DecimalField(decimal_places=2, max_digits=12)
     amount_km = models.DecimalField(decimal_places=2, max_digits=12)
+    # emission = models.DecimalField(decimal_places=2, max_digits=12)
 
     capacity = models.DecimalField(
         decimal_places=2, max_digits=12, blank=True, null=True)

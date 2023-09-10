@@ -5,6 +5,7 @@ from django.db import models
 class SettingWork(models.Model):
     id = models.AutoField(primary_key=True)
     minutes = models.IntegerField()
+    velocity_per_h = models.IntegerField()
 
     created_at = models.DateTimeField(
         default=datetime.now, null=True)

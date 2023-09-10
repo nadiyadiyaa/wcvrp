@@ -3,7 +3,8 @@
     "model": "master.SettingWork",
     "pk": 1,
     "fields": {
-      "minutes": 420
+      "minutes": 420,
+      "velocity_per_h": 30
     }
   }
 ]

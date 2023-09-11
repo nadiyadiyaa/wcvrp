@@ -11,4 +11,5 @@ py manage.py seed_nodes
 .\venv\Scripts\activate
 python .\manage.py runserver
 
+<!-- cara update ver -->
 git pull origin main

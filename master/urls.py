@@ -25,6 +25,8 @@ urlpatterns = [
     path('place/add', PlaceController.add, name='add_place'),
     path('place/submit', PlaceController.submit, name='submit_place'),
     path('place/update', PlaceController.update, name='update_place'),
+     path('place/delete', PlaceController.delete,
+         name='delete_place'),
 
     path('fuel', FuelController.index, name='list_fuel'),
     path('fuel/<int:id>', FuelController.edit, name='edit_fuel'),

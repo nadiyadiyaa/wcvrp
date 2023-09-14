@@ -218,6 +218,12 @@ class RoutePlanningController():
         tpa = Place.objects.filter(nodes=code_tpa).first()
         dipo = Place.objects.filter(nodes=code_dipo).first()
 
+        depot_dis = PlaceDistance.objects.filter(
+            from_place_id=ID_TPA,
+            to_place_id=ID_DIPO).first()
+
+        fuel_factor = Fuel.objects.get(pk=q_fuel)
+
         while process:
             is_finish = PlaceCompletement.objects.filter(mtrial_id=mtrial.pk).filter(
                 Q(status=StatusPlace.YET) | Q(status=StatusPlace.PARTIAL)).count()
@@ -230,6 +236,23 @@ class RoutePlanningController():
                 is_dump = PlaceCompletement.objects.filter(mtrial_id=mtrial.pk).\
                     filter(Q(status=StatusPlace.YET)).count()
                 if is_dump < 1:
+                    truck = TruckHistory.objects.filter(
+                        truck_id=(truck_id)).order_by('-id').first()
+                    dctn = TruckDirection(
+                        mtrial_id=mtrial.pk,
+                        truck_id=truck.id,
+                        place_id=2,
+                        takes_time=0,
+                        capacity=0,
+                        amount_km=depot_dis.distance,
+                        emission=(
+                            (depot_dis.distance) *
+                            (fuel_factor.ems_factor) *
+                            (TypeTime.objects.get(type_id=1).consumption)
+                        )
+                    )
+                    dctn.save()
+
                     truck_type = int(TruckType.DUMP.value)
                     truck_capacity = Capacity.DUMP.value
                     ritation = 1
@@ -290,12 +313,6 @@ class RoutePlanningController():
                 tpa_dis = PlaceDistance.objects.filter(
                     from_place_id=ID_TPA,
                     to_place_id=place_id).first()
-
-                depot_dis = PlaceDistance.objects.filter(
-                    from_place_id=ID_TPA,
-                    to_place_id=ID_DIPO).first()
-
-                fuel_factor = Fuel.objects.get(pk=q_fuel)
 
                 # TRUCK ARMROLL
                 if truck_type is int(TruckType.ARMROLL.value):
@@ -371,11 +388,13 @@ class RoutePlanningController():
 
                             truck.update(
                                 is_complete=True,
+
                                 reach_minutes=(
                                     float(exist_truck.reach_minutes) +
                                     (float(depot_dis.distance) * velocity)
                                 )
                             )
+
                             ritation = 1
                             truck_id += 1
 
@@ -384,17 +403,6 @@ class RoutePlanningController():
                             from_place_id=tpa.id,
                             to_place_id=place_id,
                         ).first()
-
-                        # Check if restunder capacity of armroll
-                        up_rest = float(rest) - float(truck_capacity)
-                        place_prob.update(rest=up_rest)
-                        if up_rest < truck_capacity:
-                            place_prob.update(
-                                status=StatusPlace.PARTIAL.value)
-
-                        if up_rest <= 0:
-                            place_prob.update(
-                                status=StatusPlace.DONE.value)
 
                         truck = TruckHistory(
                             mtrial_id=mtrial.pk,
@@ -423,6 +431,17 @@ class RoutePlanningController():
                             )
                         )
                         dctn.save()
+
+                        # Check if restunder capacity of armroll
+                        up_rest = float(rest) - float(truck_capacity)
+                        place_prob.update(rest=up_rest)
+                        if up_rest < truck_capacity:
+                            place_prob.update(
+                                status=StatusPlace.PARTIAL.value)
+
+                        if up_rest <= 0:
+                            place_prob.update(
+                                status=StatusPlace.DONE.value)
 
                         ritation += 1
 
@@ -657,7 +676,7 @@ class RoutePlanningController():
             reach_minutes += truck.reach_minutes
 
             direction = TruckDirection.objects.filter(
-                truck_id=truck.id).order_by('id')
+                mtrial_id=id, truck_id=truck.id).order_by('id')
             temp_dir = ''
             temp_km = 0
             temp_ems = 0
@@ -703,10 +722,10 @@ class RoutePlanningController():
     @require_http_methods(["POST"])
     def delete(request):
         id = int(request.POST['id'])
-        TruckDirection.objects.filter().delete()
-        TruckHistory.objects.filter().delete()
-        PlaceCompletement.objects.filter().delete()
-        MainTrial.objects.filter().delete()
+        TruckDirection.objects.filter(mtrial_id=id).delete()
+        TruckHistory.objects.filter(mtrial_id=id).delete()
+        PlaceCompletement.objects.filter(mtrial_id=id).delete()
+        MainTrial.objects.filter(id=id).delete()
 
         messages.success(request, "Success delete route planning!")
         return redirect("list_route_planning")

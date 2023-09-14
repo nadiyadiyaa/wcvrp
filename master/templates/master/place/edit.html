@@ -3,7 +3,10 @@
 <div class="container-xxl flex-grow-1 container-p-y">
   <div class="row">
     <div class="col-12">
-      <form method="PUT" action="{% url 'update_place' %}">
+      <form method="POST" action="{% url 'update_place' %}">
+        {% csrf_token %}
+        <input type="hidden" name="id" value="{{ place.id }}">
+
         <div class="card">
           <div class="card-header">
             <h4 style="display: inline-block" class="card-title">
@@ -14,67 +17,32 @@
             <div class="row">
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Name</label
-                  >
-                  <input
-                    type="text"
-                    name="name"
-                    class="form-control"
-                    value="{{ place.name }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Name</label>
+                  <input type="text" name="name" class="form-control" value="{{ place.name }}" />
                 </div>
               </div>
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Location</label
-                  >
-                  <input
-                    type="text"
-                    name="location"
-                    class="form-control"
-                    value="{{ place.location }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Location</label>
+                  <input type="text" name="location" class="form-control" value="{{ place.location }}" />
                 </div>
               </div>
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Latitude</label
-                  >
-                  <input
-                    type="text"
-                    name="latitude"
-                    class="form-control"
-                    value="{{ place.latitude }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Latitude</label>
+                  <input type="text" name="latitude" class="form-control" value="{{ place.latitude }}" />
                 </div>
               </div>
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Longitude</label
-                  >
-                  <input
-                    type="text"
-                    name="longitude"
-                    class="form-control"
-                    value="{{ place.longitude }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Longitude</label>
+                  <input type="text" name="longitude" class="form-control" value="{{ place.longitude }}" />
                 </div>
               </div>
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Volume</label
-                  >
-                  <input
-                    type="text"
-                    name="volume"
-                    class="form-control"
-                    value="{{ place.volume }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Volume</label>
+                  <input type="text" name="volume" class="form-control" value="{{ place.volume|default_if_none:0 }}" />
                 </div>
               </div>
             </div>
@@ -82,81 +50,42 @@
             <div class="row">
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Created At</label
-                  >
-                  <input
-                    readonly
-                    type="text"
-                    name="name"
-                    class="form-control"
-                    value="{{ place.created_at }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Created At</label>
+                  <input readonly type="text" class="form-control" value="{{ place.created_at }}" />
                 </div>
               </div>
 
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Created By</label
-                  >
-                  <input
-                    readonly
-                    type="text"
-                    name="name"
-                    class="form-control"
-                    value="{{ place.created_by }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Created By</label>
+                  <input readonly type="text" class="form-control" value="{{ place.created_by }}" />
                 </div>
               </div>
 
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Modified At</label
-                  >
-                  <input
-                    readonly
-                    type="text"
-                    name="name"
-                    class="form-control"
-                    value="{{ place.modified_at }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Modified At</label>
+                  <input readonly type="text" class="form-control" value="{{ place.modified_at }}" />
                 </div>
               </div>
 
               <div class="col-6">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label"
-                    >Modified By</label
-                  >
-                  <input
-                    readonly
-                    type="text"
-                    name="name"
-                    class="form-control"
-                    value="{{ place.modified_by }}"
-                  />
+                  <label for="exampleFormControlInput1" class="form-label">Modified By</label>
+                  <input readonly type="text" class="form-control" value="{{ place.modified_by }}" />
                 </div>
               </div>
             </div>
           </div>
 
           <div class="card-footer">
-            <button
-              type="button"
-              onclick="window.history.go(-1); return false;"
-              class="btn btn-outline-secondary btn-md"
-            >
+            <button type="button" onclick="window.history.go(-1); return false;"
+              class="btn btn-outline-secondary btn-md">
               <i class="bi bi-arrow-left" style="margin-right: 3px"></i>
               Back
             </button>
 
-            <button
-              type="submit"
-              class="btn btn-primary btn-md text-white"
-              style="margin-left: 10px"
-            >
+            <button type="submit" class="btn btn-primary btn-md text-white" style="margin-left: 10px">
               <i class="bi bi-box-arrow-down" style="margin-right: 3px"></i>
               Update
             </button>

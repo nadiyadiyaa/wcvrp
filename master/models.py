@@ -112,6 +112,7 @@ class TruckClass(models.Model):
 class TruckType(models.Model):
     id = models.AutoField(primary_key=True)
     truck_type = models.CharField(max_length=200)
+    capacity = models.DecimalField(decimal_places=2, max_digits=12)
 
     created_at = models.DateTimeField(
         default=datetime.now, null=True)
@@ -184,8 +185,6 @@ class Truck(models.Model):
 
     no_pol = models.CharField(max_length=255)
     year = models.CharField(max_length=255)
-
-    capacity = models.DecimalField(decimal_places=2, max_digits=12)
 
     created_at = models.DateTimeField(
         default=datetime.now, null=True)

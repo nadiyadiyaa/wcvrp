@@ -15,6 +15,13 @@ urlpatterns = [
     path('route-planning/add', RoutePlanningController.create,
          name='add_route_planning'),
 
-    path('route-tracking/submit', RoutePlanningController.submit,
+    path('route-planning/submit', RoutePlanningController.submit,
          name='submit_route_planning'),
+
+    path('route-planning/delete', RoutePlanningController.delete,
+         name='delete_route_planning'),
+
+    path('get-truck-direction', RoutePlanningController.get_truck_direction,
+         name='get_truck_direction'),
+
 ]

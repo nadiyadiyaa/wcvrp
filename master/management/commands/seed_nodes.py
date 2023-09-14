@@ -32,4 +32,13 @@ class Command(BaseCommand):
                         )
                         distance.save()
 
+                        distance2 = PlaceDistance(
+                            from_place_id=tp.id,
+                            to_place_id=fp.id,
+                            distance=Decimal(values[idx].value),
+                            created_by='System',
+                            modified_by='System',
+                        )
+                        distance2.save()
+
             num += 1

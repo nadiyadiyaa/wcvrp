@@ -26,7 +26,8 @@
                                     <select name="fuel_id" class="form-select" id="exampleFormControlSelect1"
                                         aria-label="Default select example" required>
                                         {% for fl in fuel %}
-                                        <option value="{{ fl.id }}">{{ fl.fuel_name }} | Factor : {{fl.ems_factor}}
+                                        <option value="{{ fl.id }}" {% if fl.id is 2 %} selected {% endif %}>
+                                            {{fl.fuel_name }} | Factor : {{fl.ems_factor}}
                                         </option>
                                         {% endfor %}
                                     </select>
@@ -36,35 +37,35 @@
                                 <div class="mb-3">
                                     <label>Velocity (km/h)</label>
                                     <input type="number" name="velocity" class="form-control" value="{{ velocity }}"
-                                        required />
+                                        step=".01" required />
                                 </div>
                             </div>
                             <div class="col-lg-3">
                                 <div class="mb-3">
                                     <label>Armroll Loading Time (min)</label>
                                     <input type="number" name="loading_armroll" class="form-control"
-                                        value="{{ armroll.loading_time }}" required />
+                                        value="{{ armroll.loading_time }}" step=".01" required />
                                 </div>
                             </div>
                             <div class="col-lg-3">
                                 <div class="mb-3">
                                     <label>Armroll Unloading Time (min)</label>
                                     <input type="number" name="unloading_armroll" class="form-control"
-                                        value="{{ armroll.unloading_time }}" required />
+                                        value="{{ armroll.unloading_time }}" step=".01" required />
                                 </div>
                             </div>
                             <div class="col-lg-3">
                                 <div class="mb-3">
                                     <label>Dump Loading Time (min)</label>
                                     <input type="number" name="loading_dump" class="form-control"
-                                        value="{{ dump.loading_time }}" required />
+                                        value="{{ dump.loading_time }}" step=".01" required />
                                 </div>
                             </div>
                             <div class="col-lg-3">
                                 <div class="mb-3">
                                     <label>Dump Unloading Time (min)</label>
                                     <input type="number" name="unloading_dump" class="form-control"
-                                        value="{{ dump.unloading_time }}" required />
+                                        value="{{ dump.unloading_time }}" step=".01" required />
                                 </div>
                             </div>
                         </div>

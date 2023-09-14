@@ -13,6 +13,7 @@ class DashboardController():
         c_truck = Truck.objects.count()
 
         return render(request, "index.html", {
+            'title': 'Dashboard',
             'c_kecamatan': c_kecamatan,
             'c_place': c_place,
             'c_truck': c_truck,

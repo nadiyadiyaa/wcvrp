@@ -1,17 +1,20 @@
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
-from django.db.models import Min
-from django.contrib import messages
+
 from django.forms import model_to_dict
 from django.db.models import Sum
+from django.http.response import JsonResponse
 from django.db.models import Q
 from django.shortcuts import redirect, render
-from django.http.response import JsonResponse, HttpResponse
 
 from master.models import *
-from transaction.models import *
 from transaction.controller.ExportController import render_to_pdf
+from transaction.models import *
+from django.db.models import Min
+
+from django.contrib import messages
 
 
 class StatusPlace(models.TextChoices):
@@ -351,6 +354,21 @@ class RoutePlanningController():
                                 ritation += 1
 
                         else:
+                            dctn = TruckDirection(
+                                mtrial_id=mtrial.pk,
+                                truck_id=exist_truck.id,
+                                place_id=2,
+                                takes_time=0,
+                                capacity=0,
+                                amount_km=depot_dis.distance,
+                                emission=(
+                                    (depot_dis.distance) *
+                                    (fuel_factor.ems_factor) *
+                                    (type_time.consumption)
+                                )
+                            )
+                            dctn.save()
+
                             truck.update(
                                 is_complete=True,
                                 reach_minutes=(
@@ -366,6 +384,17 @@ class RoutePlanningController():
                             from_place_id=tpa.id,
                             to_place_id=place_id,
                         ).first()
+
+                        # Check if restunder capacity of armroll
+                        up_rest = float(rest) - float(truck_capacity)
+                        place_prob.update(rest=up_rest)
+                        if up_rest < truck_capacity:
+                            place_prob.update(
+                                status=StatusPlace.PARTIAL.value)
+
+                        if up_rest <= 0:
+                            place_prob.update(
+                                status=StatusPlace.DONE.value)
 
                         truck = TruckHistory(
                             mtrial_id=mtrial.pk,
@@ -394,17 +423,6 @@ class RoutePlanningController():
                             )
                         )
                         dctn.save()
-
-                        # Check if restunder capacity of armroll
-                        up_rest = float(rest) - float(truck_capacity)
-                        place_prob.update(rest=up_rest)
-                        if up_rest < truck_capacity:
-                            place_prob.update(
-                                status=StatusPlace.PARTIAL.value)
-
-                        if up_rest <= 0:
-                            place_prob.update(
-                                status=StatusPlace.DONE.value)
 
                         ritation += 1
 
@@ -626,23 +644,40 @@ class RoutePlanningController():
         amount_kms = ['']
         emissions = ['']
 
+        reach_minutes = 0
+        reach_kms = 0
+        reach_emission = 0
+
         planning = MainTrial.objects.get(pk=id)
-        truck_history = TruckHistory.objects.filter(
-            mtrial_id=id).order_by('type_id')
+        th = TruckHistory.objects.filter(
+            mtrial_id=id)
+        truck_history = th.order_by('id')
 
         for truck in truck_history:
-            direction = TruckDirection.objects.filter(truck_id=truck.id)
+            reach_minutes += truck.reach_minutes
+
+            direction = TruckDirection.objects.filter(
+                truck_id=truck.id).order_by('id')
             temp_dir = ''
             temp_km = 0
             temp_ems = 0
 
             for idx, dir in enumerate(direction):
+                reach_kms += dir.amount_km
+                reach_emission += dir.emission
+
+                if idx is 0:
+                    temp_dir += '0 - '
+
                 temp_dir += (dir.place.nodes)
                 temp_km += (dir.amount_km)
                 temp_ems += (dir.emission)
 
                 if idx != len(direction) - 1:
                     temp_dir += ' - '
+
+                if (idx != len(direction) - 1) and (truck.type_id == 1):
+                    temp_dir += 'X - '
 
             directions.append(temp_dir)
             amount_kms.append(temp_km)
@@ -653,7 +688,13 @@ class RoutePlanningController():
             'truck_history': truck_history,
             'directions': directions,
             'amount_kms': amount_kms,
-            'emissions': emissions
+            'emissions': emissions,
+            'amount_truck': len(truck_history),
+            'amount_armroll': len(th.filter(type_id=1)),
+            'amount_dump': len(th.filter(type_id=2)),
+            'amount_minutes': reach_minutes,
+            'amount_km': reach_kms,
+            'amount_emission': reach_emission,
         })
 
         return HttpResponse(pdf, content_type='application/pdf')

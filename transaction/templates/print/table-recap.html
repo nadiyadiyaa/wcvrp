@@ -37,13 +37,13 @@
     <table>
         <thead>
             <tr style="background-color: rgb(233, 221, 233);">
-                <th style="width: 50px;">Trip</th>
-                <th style="width: 70px;">K</th>
+                <th style="width: 60px;">Trip</th>
+                <th style="width: 120px;">K</th>
                 <th>Route</th>
-                <th style="width: 150px;">Start - End</th>
+                <th style="width: 120px;">Start - End</th>
                 <th style="width: 130px;">TCT (minutes)</th>
                 <th style="width: 130px;">TD (kilometer)</th>
-                <th style="width: 130px;">CO2 Emission (kilogram)</th>
+                <th style="width: 200px;">CO2 Emission (kilogram)</th>
             </tr>
         </thead>
         <tbody>
@@ -58,6 +58,18 @@
                 <td>{{ emissions|index:forloop.counter }}</td>
             </tr>
             {% endfor %}
+            <tr style="margin-bottom: 10px; min-height: 40px; background-color: rgb(233, 221, 233); font-weight: bold;">
+                <td>N : {{ amount_truck }}</td>
+                <td>
+                    Armroll : {{amount_armroll}}
+                    Dump : {{amount_dump}}
+                </td>
+                <td style="text-align: left;"> </td>
+                <td> </td>
+                <td>{{ amount_minutes }} minutes</td>
+                <td>{{ amount_km }} km</td>
+                <td>{{ amount_emission }} kg/CO2</td>
+            </tr>
         </tbody>
     </table>
 

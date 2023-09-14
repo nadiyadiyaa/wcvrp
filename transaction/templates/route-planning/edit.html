@@ -54,14 +54,14 @@
                         </div>
                         <div class="col-lg-3">
                             <div class="mb-3">
-                                <label>Dump Loading Time (min)</label>
+                                <label>Dump Loading Time (min/m³)</label>
                                 <input type="number" name="loading_dump" class="form-control" step=".01"
                                     value="{{ main.loading_dump }}" step=".01" readonly />
                             </div>
                         </div>
                         <div class="col-lg-3">
                             <div class="mb-3">
-                                <label>Dump Unloading Time (min)</label>
+                                <label>Dump Unloading Time (min/m³)</label>
                                 <input type="number" name="unloading_dump" class="form-control" step=".01"
                                     value="{{ main.unloading_dump }}" step=".01" readonly />
                             </div>
@@ -125,6 +125,12 @@
                             </div>
                         </div>
 
+                        <h3 class="mb-4 mt-5">Table Recap</h3>
+                        <div class="col-4">
+                            <a href="{% url 'export_recap' main.id %}" class="btn btn-warning" type="submit"
+                                target="_blank">Get
+                                Table Recap</a>
+                        </div>
                         <hr class="hr my-5" />
 
                         {% for truck in truck_history %}
@@ -200,11 +206,16 @@
             },
             success: function (response) {
                 const data = response.data;
+                var baseTime = "06:00:00";
+                var before = 0
 
                 $(".vtl").empty();
                 for (const dt of data) {
                     var capacity = Number(dt.capacity)
-                    var time = Number(dt.takes_time)
+                    var time = Number(dt.takes_time) - before
+
+                    var startTime = moment(baseTime, 'HH:mm:ss')
+                    var endTime = moment(baseTime, 'HH:mm:ss').add(time * 60, "seconds")
 
                     if (time > 60) {
                         time = (time / 60).toFixed(2) + ' Hours'
@@ -220,9 +231,12 @@
                             <p style="margin-bottom: 4px">Distance : ${dt.amount_km} KM</p>
                             <p style="margin-bottom: 4px">Emission : ${dt.emission} kg/CO₂</p>
                             <p style="margin-bottom: 4px">Time : ${time}</p>
+                            <p style="margin-bottom: 4px">Start-To : ${startTime.format('HH:mm:ss')} - ${endTime.format('HH:mm:ss')}</p>
                         </div>
                     `)
 
+                    baseTime = endTime.format('HH:mm');
+                    before += Number(dt.takes_time) - before
                     id++;
                 }
 

@@ -1,18 +1,17 @@
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
-
+from django.db.models import Min
+from django.contrib import messages
 from django.forms import model_to_dict
 from django.db.models import Sum
-from django.http.response import JsonResponse
 from django.db.models import Q
 from django.shortcuts import redirect, render
+from django.http.response import JsonResponse, HttpResponse
 
 from master.models import *
 from transaction.models import *
-from django.db.models import Min
-
-from django.contrib import messages
+from transaction.controller.ExportController import render_to_pdf
 
 
 class StatusPlace(models.TextChoices):
@@ -36,7 +35,7 @@ class RoutePlanningController():
         rp = MainTrial.objects.all()
 
         return render(request,
-                      "transaction/route-planning/index.html",
+                      "route-planning/index.html",
                       {
                           'title': 'Route Planning',
                           "rp": rp,
@@ -49,7 +48,7 @@ class RoutePlanningController():
         dump = TypeTime.objects.get(type_id=2)
 
         return render(request,
-                      "transaction/route-planning/add.html",
+                      "route-planning/add.html",
                       {
                           'title': 'Add Route Planning',
                           "velocity": velocity.velocity_per_h,
@@ -77,7 +76,7 @@ class RoutePlanningController():
                 total_distance += dir.amount_km
 
         return render(request,
-                      "transaction/route-planning/edit.html",
+                      "route-planning/edit.html",
                       {
                           'title': 'Detail Route Planning',
                           'c_distance': total_distance,
@@ -238,9 +237,6 @@ class RoutePlanningController():
                 {'from_place_id': tpa.id}
             )
 
-            # print(f'ritation : {ritation}')
-            # print(f'params : {params}')
-
             if replace_tpa:
                 params = replace_tpa
 
@@ -272,12 +268,6 @@ class RoutePlanningController():
                         if place_prob.status == StatusPlace.PARTIAL.value:
                             nearest = prob
                             break
-
-            # if truck_type is int(TruckType.DUMP.value):
-            #     print(f'ritation : {ritation}')
-            #     print(f'params : {params}')
-            #     print(f'from : {nearest.from_place.name}')
-            #     print(f'to : {nearest.to_place.name}')
 
             if nearest:
                 type_time = TypeTime.objects.get(type_id=truck_type)
@@ -420,7 +410,6 @@ class RoutePlanningController():
 
                 # TRUCK DUMP
                 elif truck_type is int(TruckType.DUMP.value):
-                    print("dump ..")
                     loading_time = float(
                         q_loading_dump) if q_loading_dump else type_time.loading_time
                     unloading_time = float(
@@ -553,7 +542,6 @@ class RoutePlanningController():
                                 truck_id += 1
 
                             ritation += 1
-                            print(f'place_id : {place_id}')
 
                         else:
                             takes_time = (float(distance_to_tpa) * velocity)
@@ -631,11 +619,49 @@ class RoutePlanningController():
             'data': trucks
         })
 
-    # @csrf_exempt
-    # @require_http_methods(["POST"])
-    def delete(request):
-        # id = int(request.POST['id'])
+    @csrf_exempt
+    @require_http_methods(["GET"])
+    def export_recap(request, id):
+        directions = ['']
+        amount_kms = ['']
+        emissions = ['']
 
+        planning = MainTrial.objects.get(pk=id)
+        truck_history = TruckHistory.objects.filter(
+            mtrial_id=id).order_by('type_id')
+
+        for truck in truck_history:
+            direction = TruckDirection.objects.filter(truck_id=truck.id)
+            temp_dir = ''
+            temp_km = 0
+            temp_ems = 0
+
+            for idx, dir in enumerate(direction):
+                temp_dir += (dir.place.nodes)
+                temp_km += (dir.amount_km)
+                temp_ems += (dir.emission)
+
+                if idx != len(direction) - 1:
+                    temp_dir += ' - '
+
+            directions.append(temp_dir)
+            amount_kms.append(temp_km)
+            emissions.append(temp_ems)
+
+        pdf = render_to_pdf('print/table-recap.html', {
+            'name': planning.name,
+            'truck_history': truck_history,
+            'directions': directions,
+            'amount_kms': amount_kms,
+            'emissions': emissions
+        })
+
+        return HttpResponse(pdf, content_type='application/pdf')
+
+    @csrf_exempt
+    @require_http_methods(["POST"])
+    def delete(request):
+        id = int(request.POST['id'])
         TruckDirection.objects.filter().delete()
         TruckHistory.objects.filter().delete()
         PlaceCompletement.objects.filter().delete()

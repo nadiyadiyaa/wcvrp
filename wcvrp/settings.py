@@ -13,6 +13,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+TEMPLATE_LOADERS = (
+    'django.template.loaders.app_directories.load_template_source',
+)
 
 INSTALLED_APPS = [
     'django.contrib.admin',

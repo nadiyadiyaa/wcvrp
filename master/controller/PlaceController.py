@@ -75,3 +75,12 @@ class PlaceController():
 
         messages.success(request, "Success update place!")
         return redirect("list_place")
+
+    @csrf_exempt
+    @require_http_methods(["POST"])
+    def delete(request):
+        id = int(request.POST['id'])
+        Place.objects.filter().delete()
+
+        messages.success(request, "Success delete place!")
+        return redirect("list_place")

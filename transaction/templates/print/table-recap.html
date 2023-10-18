@@ -1,0 +1,78 @@
+{% load index %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recap {{name}}</title>
+
+    <style type="text/css">
+        @page land {
+            size: landscape;
+        }
+
+        body {
+            font-weight: 200;
+            font-size: 14px;
+        }
+
+        table,
+        th,
+        td {
+            border: 0.1px solid #c0b0c3;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        table {
+            margin: 30px auto;
+        }
+    </style>
+</head>
+
+<body style="padding: 5px;">
+    <h1>Table Recap {{name}}</h1>
+    <table>
+        <thead>
+            <tr style="background-color: rgb(233, 221, 233);">
+                <th style="width: 60px;">Trip</th>
+                <th style="width: 120px;">K</th>
+                <th>Route</th>
+                <th style="width: 120px;">Start - End</th>
+                <th style="width: 130px;">TCT (minutes)</th>
+                <th style="width: 130px;">TD (kilometer)</th>
+                <th style="width: 200px;">CO2 Emission (kilogram)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for truck in truck_history %}
+            <tr style="margin-bottom: 10px; min-height: 40px;">
+                <td>{{ forloop.counter }}</td>
+                <td>{{ truck.type_id }}</td>
+                <td style="text-align: left;">{{ directions|index:forloop.counter }}</td>
+                <td>{% get_date truck.reach_minutes %}</td>
+                <td>{{ truck.reach_minutes }}</td>
+                <td>{{ amount_kms|index:forloop.counter }}</td>
+                <td>{{ emissions|index:forloop.counter }}</td>
+            </tr>
+            {% endfor %}
+            <tr style="margin-bottom: 10px; min-height: 40px; background-color: rgb(233, 221, 233); font-weight: bold;">
+                <td>N : {{ amount_truck }}</td>
+                <td>
+                    Armroll : {{amount_armroll}}
+                    Dump : {{amount_dump}}
+                </td>
+                <td style="text-align: left;"> </td>
+                <td> </td>
+                <td>{{ amount_minutes }} minutes</td>
+                <td>{{ amount_km }} km</td>
+                <td>{{ amount_emission }} kgCO2</td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+
+</html>

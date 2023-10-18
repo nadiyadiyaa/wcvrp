@@ -1,0 +1,51 @@
+.vtl {
+  position: relative;
+  padding: 10px 10px 10px 50px;
+}
+
+.vtl,
+.vtl * {
+  box-sizing: border-box;
+}
+
+.vtl::before {
+  content: "";
+  width: 5px;
+  background-color: hsl(12, 79%, 49%);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 15px;
+}
+
+div.event {
+  padding: 15px 20px;
+  background-color: #ffebeb;
+  position: relative;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+p.date {
+  font-size: 1.1em;
+  font-weight: 700;
+  color: #ff6a00;
+}
+
+p.txt {
+  margin: 10px 0 0 0;
+  color: #222;
+}
+
+div.event::after {
+  content: "";
+  background: #fff;
+  border: 4px solid #de421a;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+
+  position: absolute;
+  top: 40%;
+  left: -40px;
+}

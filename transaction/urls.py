@@ -18,6 +18,9 @@ urlpatterns = [
     path('route-planning/submit', RoutePlanningController.submit,
          name='submit_route_planning'),
 
+    path('route-planning/export-recap/<int:id>', RoutePlanningController.export_recap,
+         name='export_recap'),
+
     path('route-planning/delete', RoutePlanningController.delete,
          name='delete_route_planning'),
 
